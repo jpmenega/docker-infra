@@ -1,0 +1,104 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: create the 'ubuntu' user
+      user: name=ubuntu append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'ubuntu' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'ubuntu ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: set up authorized keys for the ubuntu user
+      authorized_key: user=ubuntu key="{{item}}"
+      with_file:
+        - ~/.ssh/id_rsa.pub
+
+    - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+      shell: |
+        swapoff -a
+
+    - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+    - name: "Build hosts file"
+      lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_host }} {{item}}.{{ domain_name }} {{item}}" state=present
+      when: hostvars[item].ansible_host is defined
+      with_items: "{{ groups['all'] }}"
+
+    - name: Download Zabbix Agent release
+      get_url: 
+        url="{{ zabbix_agent_package_url }}"
+        dest="/root/{{ zabbix_agent_package_name }}.deb"
+
+    - name: Install Zabbix Agent package
+      apt: deb="/root/{{ zabbix_agent_package_name }}.deb"
+
+    - name: "Install zabbix-agent"
+      apt:
+       name: zabbix-agent
+       state: present
+       update_cache: true
+
+    - name: "Configure Zabbix Agent"
+      copy:
+        dest: /etc/zabbix/zabbix_agentd.conf
+        mode: u=rw,g=r,o=r
+        owner: zabbix
+        content: |
+            PidFile=/run/zabbix/zabbix_agentd.pid
+            LogFile=/var/log/zabbix/zabbix_agentd.log
+            LogFileSize=0
+            Server={{ zabbix_server_address }}
+            ServerActive=127.0.0.1
+            Include=/etc/zabbix/zabbix_agentd.d/*.conf
+            Hostname={{ ansible_hostname }}
+
+    - name: gluster-monitoring.pl
+      shell: "wget {{ git_source }}/main/zabbix-agent/gluster-monitoring.pl"
+      args:
+        chdir: /etc/zabbix
+        creates: gluster-monitoring.pl
+      when: gluster == "yes"
+      with_items: "{{ gluster | default([]) }}"
+
+    - name: "gluster-monitoring.pl permission"
+      file:
+        path: /etc/zabbix/gluster-monitoring.pl
+        state: touch
+        mode: u=rwx,g=rx,o=rx
+      when: gluster == "yes"
+      with_items: "{{ gluster | default([]) }}"
+
+    - name: gluster.conf
+      shell: "wget {{ git_source }}/main/zabbix-agent/gluster.conf"
+      args:
+        chdir: /etc/zabbix/zabbix_agentd.d
+        creates: gluster.conf
+      when: gluster == "yes"
+      with_items: "{{ gluster | default([]) }}"
+
+    - name: zabbix sudoer
+      shell: "wget {{ git_source }}/main/zabbix-agent/zabbix"
+      args:
+        chdir: /etc/sudoers.d/
+        creates: zabbix
+      when: gluster == "yes"
+      with_items: "{{ gluster | default([]) }}"
+
+    - name: "Install libswitch-perl"
+      apt:
+       name: libswitch-perl
+       state: present
+       update_cache: true
+      when: gluster == "yes"
+      with_items: "{{ gluster | default([]) }}"
+
+    - name: Restart zabbix-agent
+      service:
+        name: zabbix-agent.service
+        state: restarted

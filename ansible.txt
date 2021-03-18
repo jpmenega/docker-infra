@@ -1,0 +1,78 @@
+===========================
+Node server pre req
+sudo su
+passwd
+
+ip addr show
+netplan apply (se precisar reaplicar o DHCP)
+
+vi /etc/ssh/sshd_config (PermitRootLogin yes)
+service sshd restart
+
+**Acessar agora por SSH
+
+*se precisar setar IP e Hostname
+echo ubuntu-<nome> > /etc/hostname
+hostname -F /etc/hostname
+
+nano /etc/default/grub
+  GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+vi /etc/netplan/00-installer-config.yaml
+-----
+network:
+  ethernets:
+    eth0:
+      addresses:
+      - 192.168.1.x/24
+      gateway4: 192.168.1.1
+      nameservers:
+        addresses:
+        - 192.168.1.1
+        search:
+        - uz.local
+    eth1: {}
+  version: 2
+-----
+reboot
+netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
+
+*Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
+ssh-keygen
+ssh-copy-id root@<demais_nodes_do_grupo_IP>
+
+*Worker nodes for GlusterFS (executar para sdb -infra- e sdc -samba-)
+cfdisk /dev/sdb (or vdb)
+mkfs -t ext4 /dev/sdb1 (or vdb1)
+mkdir -p /gfs/infra
+mount /dev/sdb1 /gfs/infra
+
+vi /etc/fstab
+/dev/sdb1       /gfs/infra   ext4    defaults,nofail
+/dev/sdc1       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
+
+============================
+Source script server pre req
+apt install ansible
+ssh-keygen
+ssh-copy-id root@<node_ip>
+============================
+Source script server
+mkdir ~/kube-cluster
+cd ~/kube-cluster
+
+nano ~/kube-cluster/hosts (alterar IPs)
+
+ansible-playbook -i hosts ~/kube-cluster/main/initial.yml
+ansible-playbook -i hosts ~/kube-cluster/lb/loadbalancer.yml
+ansible-playbook -i hosts ~/kube-cluster/docker/docker.yml
+
+ansible-playbook -i hosts ~/kube-cluster/gluster/glusterfs.yml
+ansible-playbook -i hosts ~/kube-cluster/zabbix/zabbix.yml
+ansible-playbook -i hosts ~/kube-cluster/samba-dc/samba-dc.yml
+
+--------------------
+Know issues:
+zabbix nao consegue enviar msg para Slack: Precisa alterar o dominio do script da media de slack.com para slack.com. (isso ocorre por conta do ndots:5 inserido nos resolv.conf)

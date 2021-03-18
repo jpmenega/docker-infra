@@ -1,0 +1,166 @@
+- hosts: all
+  become: yes
+  tasks:
+#    - name: install haproxy
+#      apt:
+#        name: haproxy
+#        state: present
+#        update_cache: true
+
+    - name: install pacemaker
+      apt:
+        name: pacemaker
+        state: present
+        update_cache: true
+
+    - name: install haveged
+      apt:
+        name: haveged
+        state: present
+        update_cache: true
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+ 
+    - name: corosync-keygen
+      shell: "corosync-keygen > lb-corosync-keygen.txt"
+      args:
+       chdir: $HOME
+        creates: lb-corosync-keygen.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Remove the haveged package
+      apt:
+        name: haveged
+        state: absent
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+#    - name: "Build hosts file - Gluster"
+#      lineinfile: dest=/etc/hosts regexp='.*{{ hostvars[item].gluster_hostname }}$' line="{{ hostvars[i
+#      with_items: "{{ groups['all'] }}"
+
+    - name: Create Corosync config folder
+      file:
+        path: /etc/corosync
+        state: directory
+      when: lb_slave == "yes"
+      with_items: "{{ lb_slave | default([]) }}"
+
+    - name: Copy Corosync authkey
+      synchronize: src=/etc/corosync/authkey dest=/etc/corosync/authkey
+      delegate_to: ubuntu-masternode01
+      when: lb_slave == "yes"
+      with_items: "{{ lb_slave | default([]) }}"
+
+    - name: Download corosync.conf
+      shell: "wget {{ git_source }}/lb/taint/corosync.conf; mv corosync.conf /etc/corosync > lb-corosync-conf.txt"
+      args:
+       chdir: $HOME
+       creates: lb-corosync-conf.txt
+
+#    - name: Download haproxy.cfg
+#      shell: "wget {{ git_source }}/lb/taint/haproxy.cfg; mv haproxy.cfg /etc/haproxy > lb-haproxy-cfg.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-haproxy-cfg.txt
+
+#    - name: Download haproxy heartbeat
+#      shell: "wget {{ git_source }}/lb/heartbeat/haproxy; mv haproxy /usr/lib/ocf/resource.d/heartbeat; chmod 755 /usr/lib/ocf/resource.d/heartbeat/haproxy > lb-heartbeat-conf.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-heartbeat-conf.txt
+
+#    - name: Start HAProxy
+#      service:
+#        name: haproxy.service
+#        state: stopped
+
+#    - name: Enable service HAProxy
+#      service:
+#        name: haproxy.service
+#        enabled: no
+
+    - name: Start Corosync
+      service:
+        name: corosync.service
+        state: restarted
+
+    - name: Enable service Corosync
+      service:
+        name: corosync.service
+        enabled: yes
+
+    - name: Start Pacemaker
+      service:
+        name: pacemaker.service
+        state: restarted
+
+    - name: Enable service Pacemaker
+      service:
+        name: pacemaker.service
+        enabled: yes
+
+    - name: Configure pacemaker step 1
+      shell: "crm configure property stonith-enabled=false > lb-crm1.txt"
+      args:
+        chdir: $HOME
+        creates: lb-crm1.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker step 2
+      shell: "crm configure property no-quorum-policy=ignore > lb-crm2.txt"
+      args:
+        chdir: $HOME
+        creates: lb-crm2.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker step 3
+      shell: "crm configure primitive VIP ocf:heartbeat:IPaddr2 params ip=\"192.168.1.249\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm3.txt"
+      args:
+        chdir: $HOME
+        creates: lb-crm3.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker step 3.2
+      shell: "crm configure primitive VIP2 ocf:heartbeat:IPaddr2 params ip=\"192.168.1.250\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm32.txt"
+      args:
+        chdir: $HOME
+        creates: lb-crm32.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([]) }}"
+
+#    - name: Configure pacemaker step 4
+#      shell: "crm configure primitive haproxyLB ocf:heartbeat:haproxy params conffile=/etc/haproxy/haproxy.cfg op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-crm4.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-crm4.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
+
+#    - name: Configure pacemaker step 5
+#      shell: "crm configure group grp_balancing VIP haproxyLB > lb-crm5.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-crm5.txt
+#      when: lb_primary == "yes" and notaint == "yes"
+#      with_items: "{{ (lb_primary | default([])) and (notaint | default([])) }}"
+
+#    - name: Configure pacemaker step 5
+#      shell: "crm configure group grp_balancing VIP VIP2 haproxyLB > lb-crm5.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-crm5.txt
+#      when: lb_primary == "yes" and taint == "yes"
+#      with_items: "{{ (lb_primary | default([])) and (taint | default([])) }}"
+
+    - name: Remove default node1
+      shell: "crm_node -R node1 --force > lb-crm6.txt"
+      args:
+       chdir: $HOME
+       creates: lb-crm6.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"

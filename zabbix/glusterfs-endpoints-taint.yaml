@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: glusterfs-cluster
+  namespace: zabbix
+subsets:
+- addresses:
+  - ip: 192.168.1.241
+  ports:
+  - port: 1
+- addresses:
+  - ip: 192.168.1.242
+  ports:
+  - port: 1
+- addresses:
+  - ip: 192.168.1.243
+  ports:
+  - port: 1

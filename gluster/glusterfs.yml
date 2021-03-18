@@ -1,0 +1,126 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: install software-properties-common
+     apt:
+       name: software-properties-common
+       state: present
+       update_cache: true
+     when: gluster == "yes"
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: Add Gluster repository from PPA
+     apt_repository:
+       repo: 'ppa:gluster/glusterfs-8'
+       state: present
+     when: gluster == "yes"
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: install glusterfs-server
+     apt:
+       name: glusterfs-server
+       state: present
+     when: gluster == "yes"
+     with_items: "{{ gluster | default([]) }}"
+   
+   - name: Start Gluster
+     service:
+       name: glusterd.service
+       state: started
+     when: gluster == "yes"
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: Enable service Gluster
+     service:
+       name: glusterd.service
+       enabled: yes
+     when: gluster == "yes"
+     with_items: "{{ gluster | default([]) }}"
+
+   #- name: "Build hosts file - Gluster"
+   #  lineinfile: dest=/etc/hosts regexp='.*{{ hostvars[item].gluster_hostname }}$' line="{{ hostvars[item].ansible_host }} {{ hostvars[item].gluster_hostname }}" state=present
+   #  when: hostvars[item].gluster_hostname is defined
+   #  with_items: "{{ groups['all'] }}"
+
+   #- name: install glusterfs-client
+   #  apt:
+   #    name: glusterfs-client
+   #    state: present
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: Gluster Probe
+      shell: "gluster peer probe {{ ansible_hostname }} > probe-{{ ansible_hostname }}.txt"
+      args:
+        chdir: $HOME
+        creates: probe-{{ ansible_hostname }}.txt
+      delegate_to: ubuntu-masternode01
+      when: gluster == "yes" and lb_slave == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_slave | default([])) }}"
+
+    - name: Create volume infra
+      shell: "gluster volume create volume-infra replica 2 ubuntu-masternode01:/gfs/infra ubuntu-masternode02:/gfs/infra force > gluster-volume-infra.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-volume-infra.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Create volume Samba
+      shell: "gluster volume create volume-samba replica 2 ubuntu-masternode01:/gfs/samba ubuntu-masternode02:/gfs/samba force > gluster-volume-samba.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-volume-samba.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Start volume infra
+      shell: "gluster volume start volume-infra > gluster-start-volume-infra.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-start-volume-infra.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Start volume Samba
+      shell: "gluster volume start volume-samba > gluster-start-volume-samba.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-start-volume-samba.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Creates infra client directory
+      file:
+        path: /mnt/infra
+        state: directory
+
+    - name: Creates samba client directory
+      file:
+        path: /mnt/samba
+        state: directory
+
+    - name: Mount infra client directory
+      shell: "mount -t glusterfs localhost:volume-infra /mnt/infra > gluster-mount-infra.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-mount-infra.txt
+
+    - name: Mount samba client directory
+      shell: "mount -t glusterfs -o acl localhost:volume-samba /mnt/samba > gluster-mount-samba.txt"
+      args:
+        chdir: $HOME
+        creates: gluster-mount-samba.txt
+    
+    #- name: Update fstab infra
+    #  lineinfile:
+    #    dest: /etc/fstab
+    #    line: localhost:volume-infra       /mnt/infra   glusterfs    defaults,_netdev 0 0
+    #  when: test_grep.stdout == "0"
+
+    #- name: Update fstab samba
+    #  lineinfile:
+    #    dest: /etc/fstab
+    #    line: localhost:volume-samba       /mnt/samba   glusterfs    acl,_netdev 0 0
+    #  when: test_grep.stdout == "0"

@@ -1,0 +1,61 @@
+- hosts: ubuntu-masternode01
+  become: yes
+  become_user: ubuntu
+  tasks:
+    - name: create namespace
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-ns.yaml > zabbix-namespace.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-namespace.txt
+
+    - name: create glusterfs-endpoints
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-endpoints.yaml > zabbix-gluster-endpoints.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-gluster-endpoints.txt
+      when: notaint == "yes"
+      with_items: "{{ notaint | default([]) }}"
+
+    - name: create glusterfs-endpoints (taint)
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-endpoints-taint.yaml > zabbix-gluster-endpoints-taint.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-gluster-endpoints-taint.txt
+      when: taint == "yes"
+      with_items: "{{ taint | default([]) }}"
+
+    - name: create glusterfs-service
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-service.yaml > zabbix-gluster-service.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-gluster-service.txt
+
+#    - name: create filesystem pod
+#      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-filesystem.yaml > zabbix-filesystem.txt"
+#      args:
+#        chdir: $HOME
+#        creates: zabbix-filesystem.txt
+
+    - name: create database pod
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-database.yaml > zabbix-database.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-database.txt
+
+    - name: create zabbix-server pod
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-server.yaml > zabbix-server.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-server.txt
+
+    - name: create zabbix-web-apache pod
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-web-apache.yaml > zabbix-web-apache.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-web-apache.txt
+
+    - name: create zabbix-agent pod
+      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-agent.yaml > zabbix-agent.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-agent.txt
