@@ -60,18 +60,18 @@ ssh-keygen
 ssh-copy-id root@<node_ip>
 ============================
 Source script server
-mkdir ~/kube-cluster
-cd ~/kube-cluster
+mkdir ~/docker-cluster
+cd ~/docker-cluster
 
-nano ~/kube-cluster/hosts (alterar IPs)
+nano ~/docker-cluster/hosts (alterar IPs)
 
-ansible-playbook -i hosts ~/kube-cluster/main/initial.yml
-ansible-playbook -i hosts ~/kube-cluster/lb/loadbalancer.yml
-ansible-playbook -i hosts ~/kube-cluster/docker/docker.yml
+ansible-playbook -i hosts ~/docker-cluster/main/initial.yml
+ansible-playbook -i hosts ~/docker-cluster/docker/docker.yml
 
-ansible-playbook -i hosts ~/kube-cluster/gluster/glusterfs.yml
-ansible-playbook -i hosts ~/kube-cluster/zabbix/zabbix.yml
-ansible-playbook -i hosts ~/kube-cluster/samba-dc/samba-dc.yml
+ansible-playbook -i hosts ~/docker-cluster/gluster/glusterfs.yml
+ansible-playbook -i hosts ~/docker-cluster/zabbix/zabbix.yml
+ansible-playbook -i hosts ~/docker-cluster/samba-dc/samba-dc.yml
+ansible-playbook -i hosts ~/docker-cluster/lb/loadbalancer.yml
 
 --------------------
 Know issues:

@@ -24,7 +24,7 @@
     - name: corosync-keygen
       shell: "corosync-keygen > lb-corosync-keygen.txt"
       args:
-       chdir: $HOME
+        chdir: $HOME
         creates: lb-corosync-keygen.txt
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
@@ -131,7 +131,7 @@
         chdir: $HOME
         creates: lb-crm32.txt
       when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([]) }}"
+      with_items: "{{ (lb_primary | default([])) }}"
 
 #    - name: Configure pacemaker step 4
 #      shell: "crm configure primitive haproxyLB ocf:heartbeat:haproxy params conffile=/etc/haproxy/haproxy.cfg op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-crm4.txt"

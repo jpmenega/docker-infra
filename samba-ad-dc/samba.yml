@@ -1,0 +1,37 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Create Gluster Samba config folder
+      file:
+        path: /mnt/samba/config/samba
+        state: directory
+
+    - name: Create Gluster Samba data folder
+      file:
+        path: /mnt/samba/data
+        state: directory
+
+    - name: Create Gluster Samba volumes folder
+      file:
+        path: /mnt/samba/volumes
+        state: directory
+
+    - name: Create symbolic link
+      file:
+        src: "/mnt/samba/config/samba"
+        dest: "/var/lib/samba"
+        state: link
+
+    - name: install packages
+      - command: apt-get -y attr acl samba smbclient ldap-utils winbind libnss-winbind libpam-winbind krb5-user krb5-kdc > samba-pkg-install.txt
+        environment:
+          DEBIAN_FRONTEND: noninteractive
+        args:
+          creates: samba-pkg-install.txt
+
+    - name: Download samba script
+      shell: "wget {{ git_source }}/samba-ad-dc/script/samba"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/samba
+

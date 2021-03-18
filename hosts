@@ -1,6 +1,6 @@
 [masters]
-ubuntu-masternode01 ansible_host=192.168.1.241 ansible_user=root lb_primary=yes gluster=yes taint=yes
-ubuntu-masternode02 ansible_host=192.168.1.242 ansible_user=root lb_slave=yes gluster=yes taint=yes
+ubuntu-masternode01 ansible_host=192.168.1.241 ansible_user=root lb_primary=yes gluster=yes
+ubuntu-masternode02 ansible_host=192.168.1.242 ansible_user=root lb_slave=yes gluster=yes
 #ubuntu-masternode03 ansible_host=192.168.1.243 ansible_user=root lb_slave=yes gluster=yes taint=yes
 
 #[workers]
