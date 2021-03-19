@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Resource script for samba daemon
 #
@@ -89,7 +89,7 @@ get_pid_and_conf_file()
 
         PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
         if [ "${PIDFILE}" = '' ]; then
-                PIDFILE="/var/run/${OCF_RESOURCE_INSTANCE}.pid"
+                PIDFILE="/var/run/samba/samba.pid"
         fi
 }
 
@@ -100,7 +100,7 @@ samba_status()
                 PID=`cat $PIDFILE`
                 if [ -n "$PID" ]; then
                         if ps -p $PID | grep samba >/dev/null ; then
-                                ocf_log "info samba daemon running"
+                                ocf_log info "info samba daemon running"
                                 return $OCF_SUCCESS
                         else
                                 ocf_log info "samba daemon is not running but pid file exists"
@@ -269,12 +269,12 @@ samba_validate_all()
                 exit $OCF_ERR_ARGS
         fi
 
-        if  grep -v "^#" "$CONF_FILE" | grep "pidfile" > /dev/null ; then
-                :
-        else
-                ocf_log err "Error. \"pidfile\" entry required in the samba config file by samba OCF RA."
-                return $OCF_ERR_GENERIC
-        fi
+        #if  grep -v "^#" "$CONF_FILE" | grep "pidfile" > /dev/null ; then
+        #        :
+        #else
+        #        ocf_log err "Error. \"pidfile\" entry required in the samba config file by samba OCF RA."
+        #        return $OCF_ERR_GENERIC
+        #fi
 
         return $OCF_SUCCESS
 }
