@@ -26,7 +26,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba service
-      shell: "crm configure primitive samba ocf:heartbeat:samba params conffile=/etc/samba/smb/conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
+      shell: "crm configure primitive samba ocf:heartbeat:samba params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
       args:
        chdir: $HOME
        creates: samba-lb-service.txt
