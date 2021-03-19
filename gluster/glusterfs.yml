@@ -107,11 +107,11 @@
         chdir: $HOME
         creates: gluster-mount-infra.txt
 
-    - name: Mount samba client directory
-      shell: "mount -t glusterfs -o acl localhost:volume-samba /mnt/samba > gluster-mount-samba.txt"
-      args:
-        chdir: $HOME
-        creates: gluster-mount-samba.txt
+    #- name: Mount samba client directory
+    #  shell: "mount -t glusterfs -o acl localhost:volume-samba /mnt/samba > gluster-mount-samba.txt"
+    #  args:
+    #    chdir: $HOME
+    #    creates: gluster-mount-samba.txt
     
     #- name: Update fstab infra
     #  lineinfile:

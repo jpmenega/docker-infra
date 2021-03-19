@@ -2,6 +2,30 @@
 
 set -e
 
+meta_data()
+{
+cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="samba">
+<version>1.0</version>
+<longdesc lang="en">
+This script manages samba daemon
+</longdesc>
+<shortdesc lang="en">Manages an samba daemon</shortdesc>
+
+<actions>
+<action name="start" timeout="20s"/>
+<action name="stop" timeout="20s"/>
+<action name="monitor" depth="0" timeout="20s" interval="60s" />
+<action name="validate-all" timeout="20s"/>
+<action name="meta-data"  timeout="5s"/>
+</actions>
+</resource-agent>
+END
+exit $OCF_SUCCESS
+}
+
 appSetup () {
 
 	# Set variables
@@ -18,6 +42,10 @@ appSetup () {
 	LDOMAIN=${DOMAIN,,}
 	UDOMAIN=${DOMAIN^^}
 	URDOMAIN=${UDOMAIN%%.*}
+
+        if [[ ! -f /var/lib/samba/smb.conf ]]; then
+                mount -t glusterfs -o acl localhost:volume-samba /var/lib/samba
+        fi
 
 	# If multi-site, we need to connect to the VPN before joining the domain
 	if [[ ${MULTISITE,,} == "true" ]]; then
@@ -41,7 +69,7 @@ appSetup () {
 	echo "    dns_lookup_kdc = true" >> /etc/krb5.conf
 	echo "    default_realm = ${UDOMAIN}" >> /etc/krb5.conf
 	# If the finished file isn't there, this is brand new, we're not just moving to a new container
-	if [[ ! -f /mnt/samba/config/smb.conf ]]; then
+	if [[ ! -f /var/lib/samba/smb.conf ]]; then
 		mv /etc/samba/smb.conf /etc/samba/smb.conf.orig
 		if [[ ${JOIN,,} == "true" ]]; then
 			if [[ ${JOINSITE} == "NONE" ]]; then
@@ -76,16 +104,16 @@ appSetup () {
 				" /etc/samba/smb.conf
 		fi
 		# Once we are set up, we'll make a file so that we know to use it if we ever spin this up again
-		cp /etc/samba/smb.conf /mnt/samba/config/smb.conf
+		cp /etc/samba/smb.conf /var/lib/samba/smb.conf
 	else
-		cp /mnt/samba/config/smb.conf /etc/samba/smb.conf
+		cp /var/lib/samba/smb.conf /etc/samba/smb.conf
 	fi
         
 	appStart
 }
 
 appStart () {
-	/usr/bin/samba
+	/usr/sbin/samba
 }
 
 case "$1" in
@@ -95,6 +123,8 @@ case "$1" in
 	stop)
 		killall samba
 		;;
+        meta-data)      meta_data
+                        ;;
 esac
 
 exit 0

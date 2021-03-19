@@ -117,21 +117,21 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
-    - name: Configure pacemaker step 3
-      shell: "crm configure primitive VIP ocf:heartbeat:IPaddr2 params ip=\"192.168.1.249\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm3.txt"
-      args:
-        chdir: $HOME
-        creates: lb-crm3.txt
-      when: lb_primary == "yes"
-      with_items: "{{ lb_primary | default([]) }}"
+#    - name: Configure pacemaker step 3
+#      shell: "crm configure primitive VIP-samba ocf:heartbeat:IPaddr2 params ip=\"192.168.1.249\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm3.txt"
+#      args:
+#        chdir: $HOME
+#        creates: lb-crm3.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
 
-    - name: Configure pacemaker step 3.2
-      shell: "crm configure primitive VIP2 ocf:heartbeat:IPaddr2 params ip=\"192.168.1.250\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm32.txt"
-      args:
-        chdir: $HOME
-        creates: lb-crm32.txt
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
+#    - name: Configure pacemaker step 3.2
+#      shell: "crm configure primitive VIP-zabbix ocf:heartbeat:IPaddr2 params ip=\"192.168.1.250\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-crm32.txt"
+#      args:
+#        chdir: $HOME
+#        creates: lb-crm32.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ (lb_primary | default([])) }}"
 
 #    - name: Configure pacemaker step 4
 #      shell: "crm configure primitive haproxyLB ocf:heartbeat:haproxy params conffile=/etc/haproxy/haproxy.cfg op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-crm4.txt"

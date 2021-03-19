@@ -66,12 +66,12 @@ cd ~/docker-cluster
 nano ~/docker-cluster/hosts (alterar IPs)
 
 ansible-playbook -i hosts ~/docker-cluster/main/initial.yml
+ansible-playbook -i hosts ~/docker-cluster/lb/loadbalancer.yml
 ansible-playbook -i hosts ~/docker-cluster/docker/docker.yml
 
 ansible-playbook -i hosts ~/docker-cluster/gluster/glusterfs.yml
 ansible-playbook -i hosts ~/docker-cluster/zabbix/zabbix.yml
-ansible-playbook -i hosts ~/docker-cluster/samba-dc/samba-dc.yml
-ansible-playbook -i hosts ~/docker-cluster/lb/loadbalancer.yml
+ansible-playbook -i hosts ~/docker-cluster/samba-ad-dc/samba.yml
 
 --------------------
 Know issues:
