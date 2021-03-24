@@ -41,10 +41,16 @@
         path: /var/lib/mysql
         state: directory
 
+    - command: mountpoint -q /var/lib/mysql
+      register: volume_stat
+      failed_when: False
+      changed_when: False
+
     - name: Mount gluster volume
       shell: "mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql"
       args:
         creates: /var/lib/mysql/mysql
+      when: volume_stat.rc != 0
 
     - name: "Install mariadb-common"
       apt:
@@ -75,6 +81,16 @@
         name: mysql.service
         state: stopped
 
+    - name: Disable service apache2
+      service:
+        name: apache2.service
+        enabled: no
+
+    - name: Stop apache2
+      service:
+        name: apache2.service
+        state: stopped
+
     - name: Start mysqld on the primary node
       service:
         name: mysql.service
@@ -83,10 +99,177 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Set root pwd
-      shell: "echo "UPDATE mysql.user SET Password=PASSWORD('zabbix_pwd') WHERE User='root';" | mysql -u root mysql > zabbix-mysql-root-pwd.txt"
+      shell: "echo \"UPDATE mysql.user SET Password=PASSWORD('{{ mysql_zabbix_password }}') WHERE User='root';\" | mysql -u root mysql > zabbix-mysql-root-pwd.txt"
       args:
         chdir: $HOME
         creates: zabbix-mysql-root-pwd.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
+    - name: Create Zabbix database
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"create database zabbix character set utf8 collate utf8_bin;\" > zabbix-mysql-db-create.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-db-create.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Grant zabbix user privileges - localhost
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on zabbix.* to zabbix@localhost identified by '{{ mysql_zabbix_password }}';\" > zabbix-mysql-privileges-localhost.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-privileges-localhost.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Grant zabbix user privileges
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on zabbix.* to zabbix@{{ item }}.{{ domain_name }} identified by '{{ mysql_zabbix_password }}';\" > zabbix-mysql-privileges-{{ item }}.{{ domain_name }}.txt"
+      delegate_to: "{{ master_node_delegate }}"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-privileges-{{ item }}.{{ domain_name }}.txt
+      with_items: "{{ groups['all'] }}"
+
+    - name: MySQL disable strict mode
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"set global innodb_strict_mode='OFF';\" > zabbix-mysql-disable-strict-mode.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-disable-strict-mode.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Import database schema for Zabbix server
+      shell: "zcat /usr/share/doc/zabbix-server-mysql/create.sql.gz | mysql -uzabbix -p'{{ mysql_zabbix_password }}' zabbix > zabbix-mysql-import-schema.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-import-schema.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: MySQL enable strict mode
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"set global innodb_strict_mode='ON';\" > zabbix-mysql-enable-strict-mode.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-mysql-enable-strict-mode.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: "Configure Zabbix Mysql host"
+      lineinfile: 
+        dest=/etc/zabbix/zabbix_server.conf 
+        regexp='^# DBHost='
+        line="DBHost={{ mysql_vip_ip }}" 
+        state=present
+
+    - name: "Configure Zabbix Mysql password"
+      lineinfile:
+        dest=/etc/zabbix/zabbix_server.conf
+        regexp='^# DBPassword='
+        line="DBPassword={{ mysql_zabbix_password }}"
+        state=present
+    
+    - name: "Configure Apache Frontend timezone"
+      lineinfile:
+        dest=/etc/zabbix/apache.conf
+        regexp='.# php_value date.timezone'
+        line="        php_value date.timezone America/Sao_Paulo"
+        state=present 
+
+    - name: Stop mysqld
+      service:
+        name: mysql.service
+        state: stopped
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Download crm mysql script
+      shell: "wget {{ git_source }}/zabbix/script/mysql"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/mysql
+
+    - name: change mysql script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/mysql
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
+#    - name: Download crm apache2 script
+#      shell: "wget {{ git_source }}/zabbix/script/apache2"
+#      args:
+#        chdir: /usr/lib/ocf/resource.d/heartbeat
+#        creates: /usr/lib/ocf/resource.d/heartbeat/apache2
+
+#    - name: change apache2 script permission
+#      file:
+#        path: /usr/lib/ocf/resource.d/heartbeat/apache2
+#        state: touch
+#        mode: "u=rwx,g=rx,o=rx"
+
+#    - name: Download zabbix  script
+#      shell: "wget {{ git_source }}/zabbix/script/zabbix"
+#      args:
+#        chdir: /usr/lib/ocf/resource.d/heartbeat
+#        creates: /usr/lib/ocf/resource.d/heartbeat/zabbix
+
+#    - name: change zabbix script permission
+#      file:
+#        path: /usr/lib/ocf/resource.d/heartbeat/zabbix
+#        state: touch
+#        mode: "u=rwx,g=rx,o=rx"
+
+#    - name: Configure pacemaker Zabbix VIP
+#      shell: "crm configure primitive zabbixVIP ocf:heartbeat:IPaddr2 params ip=\"{{ zabbix_vip_ip }}\"" cidr_netmask=\"{{ zabbix_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-zabbix-vip.txt"
+#      args:
+#        chdir: $HOME
+#        creates: lb-zabbix-vip.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
+
+#    - name: Configure pacemaker Zabbix service
+#      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbix params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-zabbix-service.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
+
+#    - name: Configure pacemaker Apache Frontend service
+#      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-apache2-service.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
+
+#    - name: Configure pacemaker Zabbix group
+#      shell: "crm configure group grp_zabbix zabbixVIP zabbixSVC apache2SVC > lb-zabbix-group.txt"
+#      args:
+#       chdir: $HOME
+#       creates: lb-zabbix-group.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure pacemaker MySQL VIP
+      shell: "crm configure primitive mysqlVIP ocf:heartbeat:IPaddr2 params ip=\"{{ mysql_vip_ip }}\"" cidr_netmask=\"{{ mysql_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-mysql-vip.txt"
+      args:
+        chdir: $HOME
+        creates: lb-mysql-vip.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Samba service
+      shell: "crm configure primitive mysqlSVC ocf:heartbeat:samba params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0meta migration-threshold=10 > lb-mysql-service.txt"
+      args:
+       chdir: $HOME
+       creates: lb-mysql-service.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Mysql group
+      shell: "crm configure group grp_mysql mysqlVIP mysqlSVC > lb-mysql-group.txt"
+      args:
+       chdir: $HOME
+       creates: lb-mysql-group.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"

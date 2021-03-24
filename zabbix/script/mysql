@@ -1,0 +1,237 @@
+#!/bin/bash
+#
+# Resource script for mysql daemon
+#
+# Description:  Manages mysql daemon as an OCF resource in
+#               an High Availability setup.
+#
+#       usage: $0 {start|stop|status|monitor|validate-all|meta-data}
+#
+#       The "start" arg starts samba.
+#
+#       The "stop" arg stops it.
+#
+# OCF parameters:
+# OCF_RESKEY_binpath
+# OCF_RESKEY_conffile
+# OCF_RESKEY_extraconf
+#
+# Note:This RA requires that the samba config files has a "pidfile"
+# entry so that it is able to act on the correct process
+##########################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+USAGE="Usage: $0 {start|stop|status|monitor|validate-all|meta-data}";
+
+##########################################################################
+
+usage()
+{
+        echo $USAGE >&2
+}
+
+meta_data()
+{
+cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="mysql">
+<version>1.0</version>
+<longdesc lang="en">
+This script manages mysql daemon
+</longdesc>
+<shortdesc lang="en">Manages an mysql daemon</shortdesc>
+
+<parameters>
+
+<parameter name="scriptpath">
+<longdesc lang="en">
+The mysql script path.
+For example, "/etc/init.d/mysql"
+</longdesc>
+<shortdesc lang="en">Full path to the mysql script</shortdesc>
+<content type="string" default="/etc/init.d/mysql"/>
+</parameter>
+
+<parameter name="conffile">
+<longdesc lang="en">
+The samba daemon configuration file name with full path.
+For example, "/etc/mysql/mariadb.conf.d/50-server.cnf"
+</longdesc>
+<shortdesc lang="en">Configuration file name with full path</shortdesc>
+<content type="string" default="/etc/mysql/mariadb.conf.d/50-server.cnf" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start" timeout="20s"/>
+<action name="stop" timeout="20s"/>
+<action name="monitor" depth="0" timeout="20s" interval="60s" />
+<action name="validate-all" timeout="20s"/>
+<action name="meta-data"  timeout="5s"/>
+</actions>
+</resource-agent>
+END
+exit $OCF_SUCCESS
+}
+
+get_pid_and_conf_file()
+{
+        if [ -n "$OCF_RESKEY_conffile" ]; then
+                CONF_FILE=$OCF_RESKEY_conffile
+        else
+                CONF_FILE="/etc/mysql/mariadb.conf.d/50-server.cnf"
+        fi
+
+        PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
+        if [ "${PIDFILE}" = '' ]; then
+                PIDFILE="/var/run/mysqld/mysqld.pid"
+        fi
+}
+
+mysql_status()
+{
+        if [ -n "$PIDFILE" -a -f "$PIDFILE" ]; then
+                # mysql is probably running
+                PID=`cat $PIDFILE`
+                if [ -n "$PID" ]; then
+                        if ps -p $PID | grep mysql >/dev/null ; then
+                                ocf_log info "info mysql daemon running"
+                                return $OCF_SUCCESS
+                        else
+                                ocf_log info "mysql daemon is not running but pid file exists"
+                                return $OCF_NOT_RUNNING
+                        fi
+                else
+                        ocf_log err "PID file empty!"
+                        return $OCF_ERR_GENERIC
+                fi
+        fi
+
+        # mysql is not running
+        ocf_log info "mysql daemon is not running"
+        return $OCF_NOT_RUNNING
+}
+
+mysql_start()
+{
+        # if mysql is running return success
+        mysql_status
+        retVal=$?
+        if [ $retVal -eq $OCF_SUCCESS ]; then
+                exit $OCF_SUCCESS
+        elif [ $retVal -ne $OCF_NOT_RUNNING ]; then
+                ocf_log err "Error. Unknown status."
+                exit $OCF_ERR_GENERIC
+        fi
+
+        if [ -n "$OCF_RESKEY_binpath" ]; then
+                COMMAND="$OCF_RESKEY_binpath"
+        else
+                COMMAND="service mysql start"
+        fi
+
+        $COMMAND
+        if [ $? -ne 0 ]; then
+                ocf_log err "Error. mysql daemon returned error $?."
+                exit $OCF_ERR_GENERIC
+        fi
+
+        ocf_log info "Started mysql daemon."
+        exit $OCF_SUCCESS
+}
+
+
+mysql_stop()
+{
+        if mysql_status ; then
+                PID=`cat $PIDFILE`
+                if [ -n "$PID" ] ; then
+                        #kill $PID
+                        service stop mysql
+                        if [ $? -ne 0 ]; then
+                                kill -SIGKILL $PID
+                                if [ $? -ne 0 ]; then
+                                        ocf_log err "Error. Could not stop mysql daemon."
+                                        return $OCF_ERR_GENERIC
+                                fi
+                        fi
+                        rm $PIDFILE 2>/dev/null
+                fi
+        fi
+        ocf_log info "Stopped mysql daemon."
+        exit $OCF_SUCCESS
+}
+
+mysql_monitor()
+{
+        mysql_status
+}
+
+msyql_validate_all()
+{
+        if [ -n "$OCF_RESKEY_scriptpath" -a ! -x "$OCF_RESKEY_scriptpath" ]; then
+                ocf_log err "Script path $OCF_RESKEY_scriptpath does not exist."
+                exit $OCF_ERR_ARGS
+        fi
+        if [ -n "$OCF_RESKEY_conffile" -a ! -f "$OCF_RESKEY_conffile" ]; then
+                ocf_log err "Config file $OCF_RESKEY_conffile does not exist."
+                exit $OCF_ERR_ARGS
+        fi
+
+        #if  grep -v "^#" "$CONF_FILE" | grep "pidfile" > /dev/null ; then
+        #        :
+        #else
+        #        ocf_log err "Error. \"pidfile\" entry required in the samba config file by samba OCF RA."
+        #        return $OCF_ERR_GENERIC
+        #fi
+
+        return $OCF_SUCCESS
+}
+
+
+#
+# Main
+#
+
+if [ $# -ne 1 ]; then
+        usage
+        exit $OCF_ERR_ARGS
+fi
+
+case $1 in
+        start)  get_pid_and_conf_file
+                mysql_start
+                ;;
+
+        stop)   get_pid_and_conf_file
+                mysql_stop
+                ;;
+
+        status) get_pid_and_conf_file
+                mysql_status
+                ;;
+
+        monitor)get_pid_and_conf_file
+                mysql_monitor
+                ;;
+
+        validate-all)   get_pid_and_conf_file
+                        mysql_validate_all
+                        ;;
+
+        meta-data)      meta_data
+                        ;;
+
+        usage)  usage
+                exit $OCF_SUCCESS
+                ;;
+
+        *)      usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac

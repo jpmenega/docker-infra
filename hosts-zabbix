@@ -17,4 +17,7 @@ master_node_delegate=zabbix01
 gluster_replica=replica 2 zabbix01:/gfs/zabbix zabbix02:/gfs/zabbix
 zabbix_vip_ip=192.168.1.250
 zabbix_vip_netmask=24
+mysql_vip_ip=192.168.1.248
+mysql_vip_netmask=24
+mysql_zabbix_password=zabbix_pwd
 cluster_name=zabbix
