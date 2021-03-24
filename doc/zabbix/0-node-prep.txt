@@ -1,5 +1,10 @@
+#virt-install --virt-type=kvm --name zabbix02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/zabbix02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/zabbix02-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
+
+#ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
+
+VNC localhost 5900
+
 ===========================
-Node server pre req
 sudo su
 passwd
 
@@ -12,7 +17,7 @@ service sshd restart
 **Acessar agora por SSH
 
 *se precisar setar IP e Hostname
-echo ubuntu-<nome> > /etc/hostname
+echo zabbix0? > /etc/hostname
 hostname -F /etc/hostname
 
 nano /etc/default/grub
@@ -32,8 +37,7 @@ network:
         addresses:
         - 192.168.1.1
         search:
-        - uz.local
-    eth1: {}
+        - uz.com.br
   version: 2
 -----
 reboot
@@ -46,33 +50,12 @@ ssh-copy-id root@<demais_nodes_do_grupo_IP>
 *Worker nodes for GlusterFS (executar para sdb -infra- e sdc -samba-)
 cfdisk /dev/sdb (or vdb)
 mkfs -t ext4 /dev/sdb1 (or vdb1)
-mkdir -p /gfs/infra
-mount /dev/sdb1 /gfs/infra
+mkdir -p /gfs/zabbix
+mount /dev/sdb1 /gfs/zabbix
 
 vi /etc/fstab
-/dev/sdb1       /gfs/infra   ext4    defaults,nofail
-/dev/sdc1       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
+/dev/sdb1       /gfs/zabbix   ext4    defaults,nofail
 
-============================
-Source script server pre req
-apt install ansible
-ssh-keygen
-ssh-copy-id root@<node_ip>
-============================
-Source script server
-mkdir ~/docker-cluster
-cd ~/docker-cluster
-
-nano ~/docker-cluster/hosts (alterar IPs)
-
-ansible-playbook -i hosts ~/docker-cluster/main/initial.yml
-ansible-playbook -i hosts ~/docker-cluster/lb/loadbalancer.yml
-ansible-playbook -i hosts ~/docker-cluster/docker/docker.yml
-
-ansible-playbook -i hosts ~/docker-cluster/gluster/glusterfs.yml
-ansible-playbook -i hosts ~/docker-cluster/zabbix/zabbix.yml
-ansible-playbook -i hosts ~/docker-cluster/samba-ad-dc/samba.yml
-
---------------------
-Know issues:
+=======================
+Know issue:
 zabbix nao consegue enviar msg para Slack: Precisa alterar o dominio do script da media de slack.com para slack.com. (isso ocorre por conta do ndots:5 inserido nos resolv.conf)

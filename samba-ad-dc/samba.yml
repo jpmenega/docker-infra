@@ -1,6 +1,22 @@
 - hosts: all
   become: yes
   tasks:
+    - name: Create Gluster Samba volume
+      shell: "gluster volume create volume-samba {{ gluster_replica }} force > samba-gluster-volume.txt"
+      args:
+        chdir: $HOME
+        creates: samba-gluster-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Start Gluster Samba volume
+      shell: "gluster volume start volume-samba > samba-gluster-start-volume.txt"
+      args:
+        chdir: $HOME
+        creates: samba-gluster-start-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
     - name: Create Samba data folder
       file:
         path: /var/lib/samba
@@ -11,14 +27,20 @@
       environment:
         DEBIAN_FRONTEND: noninteractive
 
-    - name: Download samba script
+    - name: Download crm samba script
       shell: "wget {{ git_source }}/samba-ad-dc/script/samba"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/samba
 
+    - name: change samba script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/samba
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
     - name: Configure pacemaker Samba VIP
-      shell: "crm configure primitive VIP-samba ocf:heartbeat:IPaddr2 params ip=\"192.168.1.249\" cidr_netmask=\"24\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
+      shell: "crm configure primitive sambaVIP ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vip_ip }}\" cidr_netmask=\"{{ samba_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
       args:
         chdir: $HOME
         creates: samba-lb-vip.txt
@@ -26,7 +48,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba service
-      shell: "crm configure primitive samba ocf:heartbeat:samba params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
+      shell: "crm configure primitive sambaSVC ocf:heartbeat:samba params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
       args:
        chdir: $HOME
        creates: samba-lb-service.txt
@@ -34,7 +56,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba group
-      shell: "crm configure group grp_balancing VIP-samba samba > samba-lb-group.txt"
+      shell: "crm configure group grp_balancing sambaVIP sambaSVC > samba-lb-group.txt"
       args:
        chdir: $HOME
        creates: samba-lb-group.txt

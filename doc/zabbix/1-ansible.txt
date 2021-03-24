@@ -1,0 +1,22 @@
+============================
+Source script server pre req
+apt install ansible
+ssh-keygen
+ssh-copy-id root@<node_ip>
+============================
+Source script server
+mkdir ~/docker-cluster
+cd ~/docker-cluster
+
+nano ~/docker-cluster/hosts-zabbix (alterar IPs)
+
+ansible-playbook -i hosts-zabbix ~/docker-cluster/main/initial.yml
+#ansible-playbook -i hosts-zabbix ~/docker-cluster/docker/docker.yml
+
+ansible-playbook -i hosts-zabbix ~/docker-cluster/gluster/glusterfs.yml
+ansible-playbook -i hosts-zabbix ~/docker-cluster/zabbix/zabbix.yml
+ansible-playbook -i hosts-zabbix ~/docker-cluster/lb/loadbalancer.yml
+
+--------------------
+Know issues:
+zabbix nao consegue enviar msg para Slack: Precisa alterar o dominio do script da media de slack.com para slack.com. (isso ocorre por conta do ndots:5 inserido nos resolv.conf)

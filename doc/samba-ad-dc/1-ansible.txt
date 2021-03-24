@@ -1,0 +1,18 @@
+============================
+Source script server pre req
+apt install ansible
+ssh-keygen
+ssh-copy-id root@<node_ip>
+============================
+Source script server
+mkdir ~/docker-cluster
+cd ~/docker-cluster
+
+nano ~/docker-cluster/hosts-samba (alterar IPs)
+
+ansible-playbook -i hosts-samba ~/docker-cluster/main/initial.yml
+ansible-playbook -i hosts-samba ~/docker-cluster/lb/loadbalancer.yml
+
+ansible-playbook -i hosts-samba ~/docker-cluster/gluster/glusterfs.yml
+ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/samba.yml
+

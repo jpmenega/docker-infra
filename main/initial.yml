@@ -25,12 +25,16 @@
         regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
         replace: '# \1'
 
+    - name: Set timezone to UTC
+      when: ansible_date_time.tz != 'America/Sao_Paulo'
+      command: timedatectl set-timezone America/Sao_Paulo
+
     - name: "Build hosts file"
       lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_host }} {{item}}.{{ domain_name }} {{item}}" state=present
       when: hostvars[item].ansible_host is defined
       with_items: "{{ groups['all'] }}"
 
-    - name: Download Zabbix Agent release
+    - name: Download Zabbix deb release
       get_url: 
         url="{{ zabbix_agent_package_url }}"
         dest="/root/{{ zabbix_agent_package_name }}.deb"

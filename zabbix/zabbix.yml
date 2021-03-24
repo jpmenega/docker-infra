@@ -1,61 +1,92 @@
-- hosts: ubuntu-masternode01
+#https://bestmonitoringtools.com/how-to-install-zabbix-server-on-ubuntu/
+- hosts: all
   become: yes
-  become_user: ubuntu
   tasks:
-    - name: create namespace
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-ns.yaml > zabbix-namespace.txt"
+    - name: "Install Zabbix Server"
+      apt:
+       name: zabbix-server-mysql
+       state: present
+       update_cache: true
+
+    - name: "Install Zabbix Frontend"
+      apt:
+       name: zabbix-frontend-php
+       state: present
+       update_cache: true
+
+    - name: "Install Apache"
+      apt:
+       name: zabbix-apache-conf
+       state: present
+       update_cache: true
+
+    - name: Create Gluster Zabbix MySQL volume
+      shell: "gluster volume create volume-zabbix {{ gluster_replica }} force > zabbix-gluster-volume.txt"
       args:
         chdir: $HOME
-        creates: zabbix-namespace.txt
+        creates: zabbix-gluster-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
 
-    - name: create glusterfs-endpoints
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-endpoints.yaml > zabbix-gluster-endpoints.txt"
+    - name: Start Gluster Zabbix MySQL volume
+      shell: "gluster volume start volume-zabbix > zabbix-gluster-start-volume.txt"
       args:
         chdir: $HOME
-        creates: zabbix-gluster-endpoints.txt
-      when: notaint == "yes"
-      with_items: "{{ notaint | default([]) }}"
+        creates: zabbix-gluster-start-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
 
-    - name: create glusterfs-endpoints (taint)
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-endpoints-taint.yaml > zabbix-gluster-endpoints-taint.txt"
+    - name: Create Zabbix MySQL data folder
+      file:
+        path: /var/lib/mysql
+        state: directory
+
+    - name: Mount gluster volume
+      shell: "mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql"
+      args:
+        creates: /var/lib/mysql/mysql
+
+    - name: "Install mariadb-common"
+      apt:
+        name: mariadb-common
+        state: present
+        update_cache: true
+
+    - name: "Install mariadb-client"
+      apt:
+        name: mariadb-client-10.3
+        state: present
+        update_cache: true
+
+    - name: "Install mariadb-server"
+      apt:
+        name: mariadb-server-10.3
+        state: present
+        update_cache: true
+      throttle: 1
+
+    - name: Disable service mysqld
+      service:
+        name: mysql.service
+        enabled: no
+
+    - name: Stop mysqld
+      service:
+        name: mysql.service
+        state: stopped
+
+    - name: Start mysqld on the primary node
+      service:
+        name: mysql.service
+        state: started
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Set root pwd
+      shell: "echo "UPDATE mysql.user SET Password=PASSWORD('zabbix_pwd') WHERE User='root';" | mysql -u root mysql > zabbix-mysql-root-pwd.txt"
       args:
         chdir: $HOME
-        creates: zabbix-gluster-endpoints-taint.txt
-      when: taint == "yes"
-      with_items: "{{ taint | default([]) }}"
+        creates: zabbix-mysql-root-pwd.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
 
-    - name: create glusterfs-service
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/glusterfs-service.yaml > zabbix-gluster-service.txt"
-      args:
-        chdir: $HOME
-        creates: zabbix-gluster-service.txt
-
-#    - name: create filesystem pod
-#      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-filesystem.yaml > zabbix-filesystem.txt"
-#      args:
-#        chdir: $HOME
-#        creates: zabbix-filesystem.txt
-
-    - name: create database pod
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-database.yaml > zabbix-database.txt"
-      args:
-        chdir: $HOME
-        creates: zabbix-database.txt
-
-    - name: create zabbix-server pod
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-server.yaml > zabbix-server.txt"
-      args:
-        chdir: $HOME
-        creates: zabbix-server.txt
-
-    - name: create zabbix-web-apache pod
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-web-apache.yaml > zabbix-web-apache.txt"
-      args:
-        chdir: $HOME
-        creates: zabbix-web-apache.txt
-
-    - name: create zabbix-agent pod
-      shell: "kubectl apply -f https://raw.githubusercontent.com/jpmenega/kubernetes/main/zabbix/kube-zabbix-agent.yaml > zabbix-agent.txt"
-      args:
-        chdir: $HOME
-        creates: zabbix-agent.txt

@@ -1,7 +1,6 @@
 [masters]
-ubuntu-masternode01 ansible_host=192.168.1.241 ansible_user=root lb_primary=yes gluster=yes
-ubuntu-masternode02 ansible_host=192.168.1.242 ansible_user=root lb_slave=yes gluster=yes
-#ubuntu-masternode03 ansible_host=192.168.1.243 ansible_user=root lb_slave=yes gluster=yes taint=yes
+zabbix01 ansible_host=192.168.1.243 ansible_user=root lb_primary=yes gluster=yes
+zabbix02 ansible_host=192.168.1.244 ansible_user=root lb_slave=yes gluster=yes
 
 #[workers]
 #ubuntu-workernode01 ansible_host=192.168.1.244 ansible_user=root gluster=yes lb_primary=yes
@@ -12,5 +11,10 @@ ansible_python_interpreter=/usr/bin/python3
 domain_name=uz.com.br
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bubuntu20.04_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1+ubuntu20.04_all.deb
-zabbix_server_address=192.168.1.250
+zabbix_server_address=192.168.1.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
+master_node_delegate=zabbix01
+gluster_replica=replica 2 zabbix01:/gfs/zabbix zabbix02:/gfs/zabbix
+zabbix_vip_ip=192.168.1.250
+zabbix_vip_netmask=24
+cluster_name=zabbix
