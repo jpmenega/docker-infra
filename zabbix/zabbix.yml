@@ -251,7 +251,7 @@
 #      with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Configure pacemaker MySQL VIP
-      shell: "crm configure primitive mysqlVIP ocf:heartbeat:IPaddr2 params ip=\"{{ mysql_vip_ip }}\"" cidr_netmask=\"{{ mysql_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-mysql-vip.txt"
+      shell: "crm configure primitive mysqlVIP ocf:heartbeat:IPaddr2 params ip=\"{{ mysql_vip_ip }}\" cidr_netmask=\"{{ mysql_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-mysql-vip.txt"
       args:
         chdir: $HOME
         creates: lb-mysql-vip.txt
