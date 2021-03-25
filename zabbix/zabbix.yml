@@ -91,7 +91,7 @@
         name: apache2.service
         state: stopped
 
-    - name: Download crm mysql script
+    - name: Download MySQL GlusterFS tunning
       shell: "wget {{ git_source }}/zabbix/config/default_auth.cnf"
       args:
         chdir: /etc/mysql/conf.d/
@@ -200,61 +200,61 @@
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
-#    - name: Download crm apache2 script
-#      shell: "wget {{ git_source }}/zabbix/script/apache2"
-#      args:
-#        chdir: /usr/lib/ocf/resource.d/heartbeat
-#        creates: /usr/lib/ocf/resource.d/heartbeat/apache2
+    - name: Download crm apache2 script
+      shell: "wget {{ git_source }}/zabbix/script/apache2"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/apache2
 
-#    - name: change apache2 script permission
-#      file:
-#        path: /usr/lib/ocf/resource.d/heartbeat/apache2
-#        state: touch
-#        mode: "u=rwx,g=rx,o=rx"
+    - name: change apache2 script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/apache2
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
 
-#    - name: Download zabbix  script
-#      shell: "wget {{ git_source }}/zabbix/script/zabbix"
-#      args:
-#        chdir: /usr/lib/ocf/resource.d/heartbeat
-#        creates: /usr/lib/ocf/resource.d/heartbeat/zabbix
+    - name: Download zabbix  script
+      shell: "wget {{ git_source }}/zabbix/script/zabbixSVC"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/zabbixSVC
 
-#    - name: change zabbix script permission
-#      file:
-#        path: /usr/lib/ocf/resource.d/heartbeat/zabbix
-#        state: touch
-#        mode: "u=rwx,g=rx,o=rx"
+    - name: change zabbix script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/zabbixSVC
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
 
-#    - name: Configure pacemaker Zabbix VIP
-#      shell: "crm configure primitive zabbixVIP ocf:heartbeat:IPaddr2 params ip=\"{{ zabbix_vip_ip }}\"" cidr_netmask=\"{{ zabbix_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-zabbix-vip.txt"
-#      args:
-#        chdir: $HOME
-#        creates: lb-zabbix-vip.txt
-#      when: lb_primary == "yes"
-#      with_items: "{{ lb_primary | default([]) }}"
+    - name: Configure pacemaker Zabbix VIP
+      shell: "crm configure primitive zabbixVIP ocf:heartbeat:IPaddr2 params ip=\"{{ zabbix_vip_ip }}\"" cidr_netmask=\"{{ zabbix_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-zabbix-vip.txt"
+      args:
+        chdir: $HOME
+        creates: lb-zabbix-vip.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
-#    - name: Configure pacemaker Zabbix service
-#      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbix params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
-#      args:
-#       chdir: $HOME
-#       creates: lb-zabbix-service.txt
-#      when: lb_primary == "yes"
-#      with_items: "{{ lb_primary | default([]) }}"
+    - name: Configure pacemaker Zabbix service
+      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-service.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
-#    - name: Configure pacemaker Apache Frontend service
-#      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
-#      args:
-#       chdir: $HOME
-#       creates: lb-apache2-service.txt
-#      when: lb_primary == "yes"
-#      with_items: "{{ lb_primary | default([]) }}"
+    - name: Configure pacemaker Apache Frontend service
+      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
+      args:
+       chdir: $HOME
+       creates: lb-apache2-service.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
-#    - name: Configure pacemaker Zabbix group
-#      shell: "crm configure group grp_zabbix zabbixVIP zabbixSVC apache2SVC > lb-zabbix-group.txt"
-#      args:
-#       chdir: $HOME
-#       creates: lb-zabbix-group.txt
-#      when: lb_primary == "yes"
-#      with_items: "{{ (lb_primary | default([])) }}"
+    - name: Configure pacemaker Zabbix group
+      shell: "crm configure group grp_zabbix zabbixVIP zabbixSVC apache2SVC > lb-zabbix-group.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-group.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Configure pacemaker MySQL VIP
       shell: "crm configure primitive mysqlVIP ocf:heartbeat:IPaddr2 params ip=\"{{ mysql_vip_ip }}\" cidr_netmask=\"{{ mysql_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-mysql-vip.txt"

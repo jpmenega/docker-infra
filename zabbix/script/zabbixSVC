@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Resource script for mysql daemon
+# Resource script for zabbix daemon
 #
-# Description:  Manages mysql daemon as an OCF resource in
+# Description:  Manages zabbix daemon as an OCF resource in
 #               an High Availability setup.
 #
 #       usage: $0 {start|stop|status|monitor|validate-all|meta-data}
@@ -38,31 +38,31 @@ meta_data()
 cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="mysql">
+<resource-agent name="zabbix">
 <version>1.0</version>
 <longdesc lang="en">
-This script manages mysql daemon
+This script manages zabbix daemon
 </longdesc>
-<shortdesc lang="en">Manages an mysql daemon</shortdesc>
+<shortdesc lang="en">Manages an zabbix daemon</shortdesc>
 
 <parameters>
 
 <parameter name="scriptpath">
 <longdesc lang="en">
-The mysql script path.
-For example, "/etc/init.d/mysql"
+The zabbix script path.
+For example, "/etc/init.d/zabbix-server"
 </longdesc>
-<shortdesc lang="en">Full path to the mysql script</shortdesc>
-<content type="string" default="/etc/init.d/mysql"/>
+<shortdesc lang="en">Full path to the zabbix script</shortdesc>
+<content type="string" default="/etc/init.d/zabbix-server"/>
 </parameter>
 
 <parameter name="conffile">
 <longdesc lang="en">
 The samba daemon configuration file name with full path.
-For example, "/etc/mysql/mariadb.conf.d/50-server.cnf"
+For example, "/etc/zabbix/zabbix_server.conf"
 </longdesc>
 <shortdesc lang="en">Configuration file name with full path</shortdesc>
-<content type="string" default="/etc/mysql/mariadb.conf.d/50-server.cnf" />
+<content type="string" default="/etc/zabbix/zabbix_server.conf" />
 </parameter>
 
 </parameters>
@@ -84,26 +84,26 @@ get_pid_and_conf_file()
         if [ -n "$OCF_RESKEY_conffile" ]; then
                 CONF_FILE=$OCF_RESKEY_conffile
         else
-                CONF_FILE="/etc/mysql/mariadb.conf.d/50-server.cnf"
+                CONF_FILE="/etc/zabbix/zabbix_server.conf"
         fi
 
         PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
         if [ "${PIDFILE}" = '' ]; then
-                PIDFILE="/var/run/mysqld/mysqld.pid"
+                PIDFILE="/var/run/zabbix/zabbix-server.pid"
         fi
 }
 
-mysql_status()
+zabbix_status()
 {
         if [ -n "$PIDFILE" -a -f "$PIDFILE" ]; then
-                # mysql is probably running
+                # zabbix is probably running
                 PID=`cat $PIDFILE`
                 if [ -n "$PID" ]; then
-                        if ps -p $PID | grep mysql >/dev/null ; then
-                                ocf_log info "info mysql daemon running"
+                        if ps -p $PID | grep zabbix-server >/dev/null ; then
+                                ocf_log info "info zabbix daemon running"
                                 return $OCF_SUCCESS
                         else
-                                ocf_log info "mysql daemon is not running but pid file exists"
+                                ocf_log info "zabbix daemon is not running but pid file exists"
                                 return $OCF_NOT_RUNNING
                         fi
                 else
@@ -112,15 +112,15 @@ mysql_status()
                 fi
         fi
 
-        # mysql is not running
-        ocf_log info "mysql daemon is not running"
+        # zabbix is not running
+        ocf_log info "zabbix daemon is not running"
         return $OCF_NOT_RUNNING
 }
 
-mysql_start()
+zabbix_start()
 {
-        # if mysql is running return success
-        mysql_status
+        # if zabbix is running return success
+        zabbix_status
         retVal=$?
         if [ $retVal -eq $OCF_SUCCESS ]; then
                 exit $OCF_SUCCESS
@@ -132,44 +132,44 @@ mysql_start()
         if [ -n "$OCF_RESKEY_scriptpath" ]; then
                 COMMAND="$OCF_RESKEY_scriptpath"
         else
-                COMMAND="service mysql start"
+                COMMAND="service zabbix-server start"
         fi
 
         $COMMAND
         if [ $? -ne 0 ]; then
-                ocf_log err "Error. mysql daemon returned error $?."
+                ocf_log err "Error. zabbix daemon returned error $?."
                 exit $OCF_ERR_GENERIC
         fi
 
-        ocf_log info "Started mysql daemon."
+        ocf_log info "Started zabbix daemon."
         exit $OCF_SUCCESS
 }
 
 
-mysql_stop()
+zabbix_stop()
 {
-        if mysql_status ; then
+        if zabbix_status ; then
                 PID=`cat $PIDFILE`
                 if [ -n "$PID" ] ; then
                         #kill $PID
-                        service mysql stop
+                        service zabbix-server stop
                         if [ $? -ne 0 ]; then
                                 kill -SIGKILL $PID
                                 if [ $? -ne 0 ]; then
-                                        ocf_log err "Error. Could not stop mysql daemon."
+                                        ocf_log err "Error. Could not stop zabbix daemon."
                                         return $OCF_ERR_GENERIC
                                 fi
                         fi
                         rm $PIDFILE 2>/dev/null
                 fi
         fi
-        ocf_log info "Stopped mysql daemon."
+        ocf_log info "Stopped zabbix daemon."
         exit $OCF_SUCCESS
 }
 
-mysql_monitor()
+zabbix_monitor()
 {
-        mysql_status
+        zabbix_status
 }
 
 msyql_validate_all()
@@ -205,23 +205,23 @@ fi
 
 case $1 in
         start)  get_pid_and_conf_file
-                mysql_start
+                zabbix_start
                 ;;
 
         stop)   get_pid_and_conf_file
-                mysql_stop
+                zabbix_stop
                 ;;
 
         status) get_pid_and_conf_file
-                mysql_status
+                zabbix_status
                 ;;
 
         monitor)get_pid_and_conf_file
-                mysql_monitor
+                zabbix_monitor
                 ;;
 
         validate-all)   get_pid_and_conf_file
-                        mysql_validate_all
+                        zabbix_validate_all
                         ;;
 
         meta-data)      meta_data
