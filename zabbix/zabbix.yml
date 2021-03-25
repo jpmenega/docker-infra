@@ -91,6 +91,12 @@
         name: apache2.service
         state: stopped
 
+    - name: Download crm mysql script
+      shell: "wget {{ git_source }}/zabbix/config/default_auth.cnf"
+      args:
+        chdir: /etc/mysql/conf.d/
+        creates: /etc/mysql/conf.d/default_auth.cnf
+
     - name: Start mysqld on the primary node
       service:
         name: mysql.service
@@ -190,7 +196,7 @@
 
     - name: change mysql script permission
       file:
-        path: /usr/lib/ocf/resource.d/heartbeat/mysql
+        path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
@@ -259,7 +265,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker MySQL service
-      shell: "crm configure primitive mysqlSVC ocf:heartbeat:mysql params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-mysql-service.txt"
+      shell: "crm configure primitive mysqlSVC ocf:heartbeat:mysqlSVC params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-mysql-service.txt"
       args:
        chdir: $HOME
        creates: lb-mysql-service.txt
