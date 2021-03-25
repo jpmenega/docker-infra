@@ -135,6 +135,9 @@ mysql_start()
                 COMMAND="service mysql start"
         fi
 
+	if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql
+        fi
         $COMMAND
         if [ $? -ne 0 ]; then
                 ocf_log err "Error. mysql daemon returned error $?."
