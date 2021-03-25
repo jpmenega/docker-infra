@@ -40,12 +40,12 @@
 #      lineinfile: dest=/etc/hosts regexp='.*{{ hostvars[item].gluster_hostname }}$' line="{{ hostvars[i
 #      with_items: "{{ groups['all'] }}"
 
-    - name: Create Corosync config folder
-      file:
-        path: /etc/corosync
-        state: directory
-      when: lb_slave == "yes"
-      with_items: "{{ lb_slave | default([]) }}"
+#    - name: Create Corosync config folder
+#      file:
+#        path: /etc/corosync
+#        state: directory
+#      when: lb_slave == "yes"
+#      with_items: "{{ lb_slave | default([]) }}"
 
     - name: Copy Corosync authkey
       synchronize: src=/etc/corosync/authkey dest=/etc/corosync/authkey

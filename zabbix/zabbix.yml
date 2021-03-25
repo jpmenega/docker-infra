@@ -183,10 +183,10 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Download crm mysql script
-      shell: "wget {{ git_source }}/zabbix/script/mysql"
+      shell: "wget {{ git_source }}/zabbix/script/mysqlSVC"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
-        creates: /usr/lib/ocf/resource.d/heartbeat/mysql
+        creates: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
 
     - name: change mysql script permission
       file:
@@ -258,8 +258,8 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
-    - name: Configure pacemaker Samba service
-      shell: "crm configure primitive mysqlSVC ocf:heartbeat:samba params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0meta migration-threshold=10 > lb-mysql-service.txt"
+    - name: Configure pacemaker MySQL service
+      shell: "crm configure primitive mysqlSVC ocf:heartbeat:mysql params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-mysql-service.txt"
       args:
        chdir: $HOME
        creates: lb-mysql-service.txt
