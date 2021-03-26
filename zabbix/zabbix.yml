@@ -41,7 +41,8 @@
         path: /var/lib/mysql
         state: directory
 
-    - command: mountpoint -q /var/lib/mysql
+    - name: Check if Gluster Volume is mounted
+      command: mountpoint -q /var/lib/mysql
       register: volume_stat
       failed_when: False
       changed_when: False
@@ -96,6 +97,13 @@
       args:
         chdir: /etc/mysql/conf.d/
         creates: /etc/mysql/conf.d/default_auth.cnf
+
+    - name: "Configure Mysql Listen"
+      lineinfile:
+        dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp='^bind-address'
+        line="bind-address            = {{ mysql_vip_ip }}"
+        state=present
 
     - name: Start mysqld on the primary node
       service:
@@ -179,7 +187,25 @@
         dest=/etc/zabbix/apache.conf
         regexp='.# php_value date.timezone'
         line="        php_value date.timezone America/Sao_Paulo"
-        state=present 
+        state=present
+
+    - name: Download Frontend database connection config
+      shell: "wget {{ git_source }}/zabbix/config/zabbix.conf.php"
+      args:
+        chdir: /etc/zabbix/web
+        creates: /etc/zabbix/web/zabbix.conf.php
+
+    - name: "Configure Frontend database connection config"
+      ansible.builtin.replace:
+        path: /etc/zabbix/web/zabbix.conf.php
+        regexp: '<mysql_vip_ip>'
+        replace: '{{ mysql_vip_ip }}'
+
+    - name: "Configure Frontend database connection config"
+      ansible.builtin.replace:
+        path: /etc/zabbix/web/zabbix.conf.php
+        regexp: '<mysql_zabbix_password>'
+        replace: '{{ mysql_zabbix_password }}'
 
     - name: Stop mysqld
       service:
@@ -233,7 +259,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker MySQL service
-      shell: "crm configure primitive mysqlSVC ocf:heartbeat:mysqlSVC params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-mysql-service.txt"
+      shell: "crm configure primitive mysqlSVC ocf:heartbeat:mysqlSVC params conffile=/etc/mysql/mariadb.conf.d/50-server.cnf op monitor interval=10s timeout=60s op start timeout=120s interval=0 op stop timeout=120s interval=0 meta migration-threshold=10 > lb-mysql-service.txt"
       args:
        chdir: $HOME
        creates: lb-mysql-service.txt
@@ -273,7 +299,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Configure pacemaker Zabbix service
-      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
+      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
       args:
        chdir: $HOME
        creates: lb-zabbix-service.txt
@@ -281,7 +307,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Apache Frontend service
-      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
+      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
       args:
        chdir: $HOME
        creates: lb-apache2-service.txt

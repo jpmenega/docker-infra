@@ -1,0 +1,9 @@
+- hosts: zabbix02
+  become: yes
+  tasks:
+    - name: "Configure Mysql Listen"
+      lineinfile:
+        dest=/etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp='^bind-address'
+        line="bind-address            = {{ mysql_vip_ip }}"
+        state=present
