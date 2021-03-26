@@ -274,8 +274,16 @@
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
-    - name: Configure mysql prefer
-      shell: "crm configure location prefer-mysql mysqlVIP 50: zabbix02 > lb-mysql-prefer.txt"
+    - name: Configure mysql lesse prefer zabbix02
+      shell: "crm configure location noprefer-mysql mysqlSVC 50: zabbix02 > lb-mysql-noprefer.txt"
+      args:
+       chdir: $HOME
+       creates: lb-mysql-noprefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure mysql prefer zabbix01
+      shell: "crm configure location prefer-mysql mysqlSVC 5: zabbix01 > lb-mysql-prefer.txt"
       args:
        chdir: $HOME
        creates: lb-mysql-prefer.txt
@@ -290,8 +298,16 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
-    - name: Configure zabbix prefer
-      shell: "crm configure location prefer-zabbix zabbixVIP 50: zabbix01 > lb-zabbix-prefer.txt"
+    - name: Configure zabbix less prefer zabbix01
+      shell: "crm configure location noprefer-zabbix zabbixVIP 50: zabbix01 > lb-zabbix-noprefer.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-noprefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure zabbix prefer zabbix02
+      shell: "crm configure location prefer-zabbix zabbixSVC 5: zabbix02 > lb-zabbix-prefer.txt"
       args:
        chdir: $HOME
        creates: lb-zabbix-prefer.txt

@@ -12,7 +12,6 @@ service sshd restart
 
 *se precisar setar IP e Hostname
 echo zabbix0? > /etc/hostname
-hostname -F /etc/hostname
 
 nano /etc/default/grub
   GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"
@@ -45,10 +44,12 @@ ssh-copy-id root@<demais_nodes_do_grupo_IP>
 cfdisk /dev/sdb (or vdb)
 mkfs -t ext4 /dev/sdb1 (or vdb1)
 mkdir -p /gfs/zabbix
-mount /dev/sdb1 /gfs/zabbix
 
 vi /etc/fstab
 /dev/sdb1       /gfs/zabbix   ext4    defaults,nofail
+
+reboot
+df -h
 
 =======================
 Know issue:
