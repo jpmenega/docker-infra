@@ -89,7 +89,7 @@ get_pid_and_conf_file()
 
         PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
         if [ "${PIDFILE}" = '' ]; then
-                PIDFILE="/var/run/zabbix/zabbix-server.pid"
+                PIDFILE="/var/run/zabbix/zabbix_server.pid"
         fi
 }
 
@@ -99,7 +99,7 @@ zabbix_status()
                 # zabbix is probably running
                 PID=`cat $PIDFILE`
                 if [ -n "$PID" ]; then
-                        if ps -p $PID | grep zabbix-server >/dev/null ; then
+                        if ps -p $PID | grep zabbix_server >/dev/null ; then
                                 ocf_log info "info zabbix daemon running"
                                 return $OCF_SUCCESS
                         else
