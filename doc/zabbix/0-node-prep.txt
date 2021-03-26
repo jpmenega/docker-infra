@@ -1,9 +1,3 @@
-#virt-install --virt-type=kvm --name zabbix02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/zabbix02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/zabbix02-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
-
-#ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
-
-VNC localhost 5900
-
 ===========================
 sudo su
 passwd

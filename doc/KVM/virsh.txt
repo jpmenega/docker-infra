@@ -1,0 +1,31 @@
+#virt-install --virt-type=kvm --name samba-ad-dc02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/samba-ad-dc02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc01-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
+
+#ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
+
+VNC localhost 5900
+
+-----------------
+
+virsh undefine <Domain_VM_Name> --remove-all-storage
+
+Console #virsh console workernode02
+VNC     #ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
+
+#virsh vncdisplay <Domain_VM_Name>
+
+------------------
+
+Create an attach new disk
+#qemu-img create -f qcow2 ubuntu-workernode03-glusterfs-samba.qcow2 1T
+#virsh attach-disk ubuntu-masternode03 \
+--source /var/lib/libvirt/images/ubuntu-workernode03-glusterfs-samba.qcow2 \
+--target vdc \
+--cache none \
+--type qcow2 \
+--persistent
+
+
+Attach ISO as CDROM if needed
+#virsh attach-disk <Domain_VM_Name> /var/lib/libvirt/boot/alpine-virt-3.12.3-x86_64.iso hdc --type cdrom
+#virsh detach-disk <Domain_VM_Name> /var/lib/libvirt/boot/alpine-virt-3.12.3-x86_64.iso
+
