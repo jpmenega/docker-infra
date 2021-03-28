@@ -298,22 +298,6 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
-    - name: Configure zabbix less prefer zabbix01
-      shell: "crm configure location noprefer-zabbix zabbixVIP 50: zabbix01 > lb-zabbix-noprefer.txt"
-      args:
-       chdir: $HOME
-       creates: lb-zabbix-noprefer.txt
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
-
-    - name: Configure zabbix prefer zabbix02
-      shell: "crm configure location prefer-zabbix zabbixSVC 5: zabbix02 > lb-zabbix-prefer.txt"
-      args:
-       chdir: $HOME
-       creates: lb-zabbix-prefer.txt
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
-
     - name: Configure pacemaker Zabbix service
       shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
       args:
@@ -335,5 +319,21 @@
       args:
        chdir: $HOME
        creates: lb-zabbix-group.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure zabbix less prefer zabbix01
+      shell: "crm configure location noprefer-zabbix zabbixSVC 50: zabbix01 > lb-zabbix-noprefer.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-noprefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure zabbix prefer zabbix02
+      shell: "crm configure location prefer-zabbix zabbixSVC 5: zabbix02 > lb-zabbix-prefer.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-prefer.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
