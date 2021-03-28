@@ -2,6 +2,33 @@
 - hosts: all
   become: yes
   tasks:
+    - name: Disable service systemd-resolved
+      service:
+        name: systemd-resolved.service
+        enabled: no
+
+    - name: Stop systemd-resolved
+      service:
+        name: systemd-resolved.service
+        state: stopped
+
+    - name: Disable service apache2
+      service:
+        name: apache2.service
+        enabled: no
+
+    - name: Remove resolv.conf managed
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+
+    - name: Creating a file with content
+      copy:
+        dest: "/etc/resolv.conf"
+        content: |
+          nameserver {{ name_server }}
+          search {{ domain_name }}
+
     - name: "Install Zabbix Server"
       apt:
        name: zabbix-server-mysql
