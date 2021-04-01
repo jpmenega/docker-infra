@@ -22,7 +22,7 @@
         path: /etc/resolv.conf
         state: absent
 
-    - name: Creating a file with content
+    - name: Creating resolv.conf
       copy:
         dest: "/etc/resolv.conf"
         content: |
@@ -46,6 +46,38 @@
        name: zabbix-apache-conf
        state: present
        update_cache: true
+
+    - name: Create Zabbix Home
+      file:
+        path: /var/lib/zabbix
+        state: directory
+
+    - name: Creating .my.cnf
+      copy:
+        dest: "/var/lib/zabbix/.my.cnf"
+        content: |
+          [client]
+          user='zabbix'
+          password='{{ mysql_zabbix_password }}'
+
+    - name: Recursively change ownership of Zabbix home folder
+      ansible.builtin.file:
+        path: /var/libl/zabbix
+        state: directory
+        recurse: yes
+        owner: zabbix
+        group: zabbix
+
+    - name: Download MySQL GlusterFS tunning
+      shell: "wget {{ git_source }}/zabbix/config/template_db_mysql.conf"
+      args:
+        chdir: /etc/zabbix/zabbix_agentd.d/
+        creates: /etc/zabbix/zabbix_agentd.d/template_db_mysql.conf
+
+    - name: Restart zabbix-agent
+      service:
+        name: zabbix-agent.service
+        state: restarted
 
     - name: Create Gluster Zabbix MySQL volume
       shell: "gluster volume create volume-zabbix {{ gluster_replica }} force > zabbix-gluster-volume.txt"
