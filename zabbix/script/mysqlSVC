@@ -117,6 +117,23 @@ mysql_status()
         return $OCF_NOT_RUNNING
 }
 
+is_isolation()
+{
+	cnt=3
+        testIP=<check_isolation_ip>
+	#testIP=1.2.3.4
+        nodePeer=<nodePeer>
+	#nodePeer=1.2.3.4
+        recv=$(/bin/ping -c 1 -w 3 -q $nodePeer | grep received | cut -d, -f2 | awk '{print $1}')
+        if [ "$recv" -eq 0 ]; then
+            recv=$(/bin/ping -c $cnt -q $testIP | grep received | cut -d, -f2 | awk '{print $1}')
+            if [ "$recv" -eq 0 ]; then
+                return 1
+            fi
+        fi
+	return 0
+}
+
 mysql_start()
 {
         # if mysql is running return success
@@ -137,7 +154,18 @@ mysql_start()
 
 	if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
                 mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql
+		if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount glusterfs partition."
+                    exit $OCF_ERR_GENERIC
+		fi
         fi
+
+	is_isolation
+	if [ $? -eq 1 ]; then
+            ocf_log err "Error. Node is alone, process halted to avoid active-active."
+            exit $OCF_ERR_GENERIC
+	fi
+
         $COMMAND
         if [ $? -ne 0 ]; then
                 ocf_log err "Error. mysql daemon returned error $?."
@@ -172,7 +200,19 @@ mysql_stop()
 
 mysql_monitor()
 {
-        mysql_status
+    mysql_status
+    if [ $? -eq $OCF_SUCCESS ] ; then
+	    is_isolation
+            if [ $? -eq 1 ]; then
+		    ocf_log err "Node is isolated, stopping mysql..."
+		    mysql_stop
+	    else
+		    exit $OCF_SUCCESS
+	    fi
+    else
+	    exit $OCF_NOT_RUNNING
+    fi
+
 }
 
 msyql_validate_all()

@@ -1,6 +1,6 @@
 [masters]
-zabbix01 ansible_host=192.168.1.243 ansible_user=root lb_primary=yes gluster=yes
-zabbix02 ansible_host=192.168.1.244 ansible_user=root lb_slave=yes gluster=yes
+zabbix01 ansible_host=192.168.1.243 ansible_user=root lb_primary=yes gluster=yes nodePeer=192.168.1.244
+zabbix02 ansible_host=192.168.1.244 ansible_user=root lb_slave=yes gluster=yes nodePeer=192.168.1.243
 
 #[workers]
 #ubuntu-workernode01 ansible_host=192.168.1.244 ansible_user=root gluster=yes lb_primary=yes
@@ -22,3 +22,4 @@ mysql_vip_ip=192.168.1.248
 mysql_vip_netmask=24
 mysql_zabbix_password=zabbix_pwd
 cluster_name=zabbix
+check_isolation_ip=208.67.220.222

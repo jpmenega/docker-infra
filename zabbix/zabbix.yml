@@ -62,7 +62,7 @@
 
     - name: Recursively change ownership of Zabbix home folder
       ansible.builtin.file:
-        path: /var/libl/zabbix
+        path: /var/lib/zabbix
         state: directory
         recurse: yes
         owner: zabbix
@@ -285,6 +285,18 @@
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
+    - name: "Configure mysqlSVC script - check_isolation_ip"
+      ansible.builtin.replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
+        regexp: '<check_isolation_ip>'
+        replace: '{{ check_isolation_ip }}'
+
+    - name: "Configure mysqlSVC script - nodePeer"
+      ansible.builtin.replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
+        regexp: '<nodePeer>'
+        replace: '{{ nodePeer }}'
+
     - name: Download crm apache2 script
       shell: "wget {{ git_source }}/zabbix/script/apache2"
       args:
@@ -394,5 +406,13 @@
       args:
        chdir: $HOME
        creates: lb-zabbix-prefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure stickiness to avoid unnecessary move on recover
+      shell: "crm configure rsc_defaults resource-stickiness=100 > lb-zabbix-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-stickiness.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
