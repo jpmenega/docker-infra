@@ -52,7 +52,7 @@
         path: /var/lib/zabbix
         state: directory
 
-    - name: Creating .my.cnf
+    - name: Creating .my.cnf (for monitoring database)
       copy:
         dest: "/var/lib/zabbix/.my.cnf"
         content: |
@@ -188,7 +188,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Grant zabbix user privileges - localhost
-      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on zabbix.* to zabbix@localhost identified by '{{ mysql_zabbix_password }}';\" > zabbix-mysql-privileges-localhost.txt"
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on *.* to zabbix@localhost identified by '{{ mysql_zabbix_password }}';\" > zabbix-mysql-privileges-localhost.txt"
       args:
         chdir: $HOME
         creates: zabbix-mysql-privileges-localhost.txt
@@ -274,7 +274,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Download crm mysql script
-      shell: "wget {{ git_source }}/zabbix/script/mysqlSVC"
+      shell: "wget {{ git_source }}/zabbix/scripts/mysqlSVC"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
@@ -298,7 +298,7 @@
         replace: '{{ nodePeer }}'
 
     - name: Download crm apache2 script
-      shell: "wget {{ git_source }}/zabbix/script/apache2"
+      shell: "wget {{ git_source }}/zabbix/scripts/apache2"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/apache2
@@ -310,7 +310,7 @@
         mode: "u=rwx,g=rx,o=rx"
 
     - name: Download zabbix script
-      shell: "wget {{ git_source }}/zabbix/script/zabbixSVC"
+      shell: "wget {{ git_source }}/zabbix/scripts/zabbixSVC"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/zabbixSVC
@@ -416,3 +416,34 @@
        creates: lb-zabbix-stickiness.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Download backup script
+      shell: "wget {{ git_source }}/zabbix/scripts/backup.sh"
+      args:
+        chdir: /var/lib/zabbix
+        creates: /var/lib/zabbix/backup.sh
+
+    - name: change backup script permission
+      file:
+        path: /var/lib/zabbix/backup.sh
+        state: touch
+        mode: "u=rwx,g=x,o=x"
+
+    - name: Change ownership of backup script
+      ansible.builtin.file:
+        path: /var/lib/zabbix/backup.sh
+        owner: zabbix
+        group: zabbix
+
+    - name: "Configure backup script - mysql_vip_ip"
+      ansible.builtin.replace:
+        path: /var/lib/zabbix/backup.sh
+        regexp: '<mysql_vip_ip>'
+        replace: '{{ mysql_vip_ip }}'
+
+    - name: Create crontab backup job
+      ansible.builtin.cron:
+        name: "check dirs"
+        minute: "0"
+        hour: "23"
+        job: "/var/lib/zabbix/backup.sh"
