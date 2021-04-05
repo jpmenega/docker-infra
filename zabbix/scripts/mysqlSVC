@@ -152,8 +152,8 @@ mysql_start()
                 COMMAND="service mysql start"
         fi
 
-        HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary| grep "Total Number of entries: 0"|wc -l)
-        if [ $HEALTHY_BRICKS != 2 ]; then
+        HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary| grep -A2 "Brick $HOSTNAME"|grep "Total Number of entries: 0"|wc -l)
+        if [ $HEALTHY_BRICKS != 1 ]; then
                 ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
                 exit $OCF_ERR_GENERIC
         fi

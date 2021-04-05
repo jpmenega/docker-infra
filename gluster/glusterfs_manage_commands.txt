@@ -7,6 +7,8 @@ gluster volume heal volume-zabbix info summary
 
 #healing pela origem
 gluster volume heal volume-zabbix split-brain source-brick zabbix01:/gfs/zabbix
+#healing pela maior data
+gluster volume heal volume-samba split-brain latest-mtime /wins.ldb
 
 #montar com permissoes para ver os GFID
 mount -t glusterfs -o aux-gfid-mount localhost:volume-zabbix /var/lib/mysql

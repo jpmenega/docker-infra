@@ -62,3 +62,27 @@
        creates: samba-lb-group.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure stickiness to avoid unnecessary move on recover
+      shell: "crm configure rsc_defaults resource-stickiness=100 > samba-lb-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-stickiness.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure samba less prefer samba-ad-dc02
+      shell: "crm configure location noprefer-samba sambaSVC 50: samba-ad-dc02 > samba-lb-noprefer.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-noprefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure samba prefer samba-ad-dc01
+      shell: "crm configure location prefer-samba sambaSVC 5: samba-adc-dc01 > samba-lb-prefer.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-prefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
