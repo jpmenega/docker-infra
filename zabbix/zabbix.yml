@@ -417,6 +417,12 @@
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
+    - name: "Install cifs-utils to allow mount smb as backup destinaiton"
+      apt:
+       name: cifs-utils
+       state: present
+       update_cache: true
+
     - name: Download backup script
       shell: "wget {{ git_source }}/zabbix/scripts/backup.sh"
       args:

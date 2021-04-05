@@ -1,0 +1,14 @@
+#status dos peers
+gluster volume status
+
+#mostrar os problemas de heal
+gluster volume heal volume-zabbix info
+gluster volume heal volume-zabbix info summary
+
+#healing pela origem
+gluster volume heal volume-zabbix split-brain source-brick zabbix01:/gfs/zabbix
+
+#montar com permissoes para ver os GFID
+mount -t glusterfs -o aux-gfid-mount localhost:volume-zabbix /var/lib/mysql
+#mostrar qual é o arquivo referente ao GFID
+getfattr -n trusted.glusterfs.pathinfo -e text /var/lib/mysql/.gfid/bb1b0266-7b44-49f7-b39e-e7444d115997
