@@ -1,0 +1,18 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Move usr-local
+      command: mv /usr/local /usr/local-temp
+
+    - name: Create usr-local folder
+      file:
+        path: /usr/local
+        state: directory
+
+    - name: Move usr-local
+      command: mount -t glusterfs -o acl localhost:volume-samba/urbackup /usr/local
+
+    - name: Bring back usr-local content
+      command: mv /usr/local-temp/* /usr/local/
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"

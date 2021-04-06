@@ -1,0 +1,41 @@
+===========================
+sudo su
+passwd
+
+ip addr show
+netplan apply (se precisar reaplicar o DHCP)
+
+vi /etc/ssh/sshd_config (PermitRootLogin yes)
+service sshd restart
+
+**Acessar agora por SSH
+
+*se precisar setar IP e Hostname
+echo urbackup0? > /etc/hostname
+
+vi /etc/netplan/00-installer-config.yaml
+-----
+network:
+  ethernets:
+    enp0s3:
+      addresses:
+      - 192.168.1.x/24
+      gateway4: 192.168.1.1
+      mtu: 9000
+      nameservers:
+        addresses:
+        - 192.168.1.1
+        search:
+        - uz.intranet
+  version: 2
+-----
+reboot
+netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
+
+vi /etc/fstab
+192.168.1.2:/urbackup   /media/BACKUP/urbackup  nfs     defaults        0       0
+
+*Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
+ssh-keygen
+ssh-copy-id root@<demais_nodes_do_grupo_IP>
+

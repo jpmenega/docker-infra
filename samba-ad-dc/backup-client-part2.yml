@@ -1,0 +1,64 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Stop urbackupclientbackend
+      service:
+        name: urbackupclientbackend
+        state: stopped
+
+    - name: Disable service urbackupclientbackend
+      service:
+        name: urbackupclientbackend.service
+        enabled: no
+
+    - name: Download crm urbackup script
+      shell: "wget {{ git_source }}/samba-ad-dc/script/urbackup"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/urbackup
+
+    - name: change urbackup script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/urbackup
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Configure pacemaker Samba VIP Bkp
+      shell: "crm configure primitive sambaVIPBkp ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vipbkp_ip }}\" cidr_netmask=\"{{ samba_vipbkp_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vipbkp.txt"
+      args:
+        chdir: $HOME
+        creates: samba-lb-vipbkp.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Samba service Bkp
+      shell: "crm configure primitive sambaSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-servicebkp.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-servicebkp.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Samba Bkp group
+      shell: "crm configure group grp_backup sambaVIPBkp sambaSVCBkp > samba-lb-groupbkp.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-groupbkp.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure samba bkp less prefer samba-ad-dc01
+      shell: "crm configure location noprefer-samba sambaSVCBkp 50: samba-ad-dc01 > samba-lb-bkp-noprefer.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-bkp-noprefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure samba bkp prefer samba-ad-dc02
+      shell: "crm configure location prefer-samba sambaSVCBkp 5: samba-adc-dc02 > samba-lb-bkp-prefer.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-bkp-prefer.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"

@@ -16,6 +16,9 @@ ansible-playbook -i hosts-samba ~/docker-cluster/lb/loadbalancer.yml
 ansible-playbook -i hosts-samba ~/docker-cluster/gluster/glusterfs.yml
 ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/samba.yml
 
+ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/backup-client.yml
+TF=$(mktemp) && wget "https://hndl.urbackup.org/Client/2.4.11/UrBackup%20Client%20Linux%202.4.11.sh" -O $TF && sudo sh $TF; rm -f $TF
+nsible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/backup-client-part2.yml
 
 cd /var/lib/samba
 rm smb.conf
