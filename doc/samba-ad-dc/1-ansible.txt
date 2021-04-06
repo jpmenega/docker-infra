@@ -16,3 +16,8 @@ ansible-playbook -i hosts-samba ~/docker-cluster/lb/loadbalancer.yml
 ansible-playbook -i hosts-samba ~/docker-cluster/gluster/glusterfs.yml
 ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/samba.yml
 
+
+cd /var/lib/samba
+rm smb.conf
+wget https://raw.githubusercontent.com/jpmenega/docker-infra/main/samba-ad-dc/example/smb.conf
+

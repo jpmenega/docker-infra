@@ -2,7 +2,7 @@
 gluster volume status
 
 #mostrar os problemas de heal
-gluster volume heal volume-zabbix info
+gluster volume heal volume-samba info
 gluster volume heal volume-zabbix info summary
 
 #healing pela origem
@@ -14,3 +14,27 @@ gluster volume heal volume-samba split-brain latest-mtime /wins.ldb
 mount -t glusterfs -o aux-gfid-mount localhost:volume-zabbix /var/lib/mysql
 #mostrar qual é o arquivo referente ao GFID
 getfattr -n trusted.glusterfs.pathinfo -e text /var/lib/mysql/.gfid/bb1b0266-7b44-49f7-b39e-e7444d115997
+
+#remove brick from volume
+gluster volume remove-brick volume-samba replica 1 samba-ad-dc02:/gfs/samba force
+#add brick to the volume
+gluster volume add-brick volume-samba replica 2 samba-ad-dc02:/gfs/samba force
+
+#delete volume
+gluster volume stop volume-samba
+gluster volume delete volume-samba
+
+#snapshot
+https://docs.gluster.org/en/v3/Administrator%20Guide/Managing%20Snapshots/
+gluster snapshot create snap-backup volume-samba no-timestamp
+gluster snapshot activate snap-backup
+mount -t glusterfs samba-ad-dc02:/snaps/snap-backup/volume-samba /mnt
+umount /mnt
+echo y|gluster snapshot deactivate snap-backup
+echo y|gluster snapshot delete snap-backup
+
+gluster snapshot delete (all | <snapname> | volume <volname>)
+gluster snapshot list [volname]
+gluster snapshot info [(snapname | volume <volname>)]
+gluster snapshot status [(snapname | volume <volname>)]
+

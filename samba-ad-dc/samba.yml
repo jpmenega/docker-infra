@@ -27,6 +27,21 @@
       environment:
         DEBIAN_FRONTEND: noninteractive
 
+    - name: Stop samba-ad-dc
+      service:
+        name: samba-ad-dc.service
+        state: stopped
+
+    - name: Delete Samba data folder
+      file:
+        state: absent
+        path: /var/lib/samba
+
+    - name: Recreate Samba data folder
+      file:
+        path: /var/lib/samba
+        state: directory
+
     - name: Download crm samba script
       shell: "wget {{ git_source }}/samba-ad-dc/script/samba"
       args:

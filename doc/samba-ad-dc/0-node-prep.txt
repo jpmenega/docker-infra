@@ -38,11 +38,19 @@ netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
 *Worker nodes for GlusterFS
 cfdisk /dev/sdb (or vdb)
-mkfs -t ext4 /dev/sdb1 (or vdb1)
-mkdir -p /gfs/samba
+ old- mkfs -t ext4 /dev/sdb1 (or vdb1)
+ old- mkdir -p /gfs/samba
+pvcreate /dev/sdb1 (or vdb1) //pvscan
+vgcreate vg_gluster /dev/sdb1 (or vdb1) //vgdisplay
+lvcreate -L 1023G --thinpool tpool_gluster vg_gluster
+//lvcreate -L 1023G -n lv_gluster_samba vg_gluster  //lvdisplay
+lvcreate -V 1023G --thin -n lv_gluster_samba vg_gluster/tpool_gluster
+mkfs.ext4 /dev/mapper/vg_gluster-lv_gluster_samba
+
 
 vi /etc/fstab
-/dev/sdb1       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
+ old- /dev/sdb1       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
+/dev/mapper/vg_gluster-lv_gluster_samba       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
 
 *Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
 ssh-keygen
