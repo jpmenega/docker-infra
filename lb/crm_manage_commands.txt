@@ -1,0 +1,10 @@
+crm status
+crm resource stop VIP
+crm configure delete VIP
+crm resource move <resource> <node>
+crm resource cleanup <resource>
+crm configure edit
+
+crm node standby <node>
+crm node show
+crm node online <node>
