@@ -72,7 +72,7 @@ exit $OCF_SUCCESS
 
 urbackup_status()
 {
-        PID=`ps -A|grep urbackupclientb|sed 's/ . .*//'`
+        PID=`ps -A|grep urbackupclientb|awk '$1=$1'|sed 's/ . .*//'`
         if [ -n "$PID" ]; then
                if ps -p $PID | grep urbackupclientb >/dev/null ; then
                         ocf_log info "info urbackup daemon running"
@@ -105,15 +105,9 @@ urbackup_start()
                 COMMAND="/usr/local/sbin/urbackupclientbackend"
         fi
 
-        HEALTHY_BRICKS=$(gluster volume heal volume-samba info summary| grep -A2 "Brick $HOSTNAME"|grep "Total Number of entries: 0"|wc -l)
-        if [ $HEALTHY_BRICKS != 1 ]; then
-                ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
-                exit $OCF_ERR_GENERIC
-        fi
-
-        if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-samba /var/lib/samba
-                if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
+        if ! (grep -qs '/usr/local ' /proc/mounts;) then
+                mount -t glusterfs -o acl localhost:volume-samba/urbackup /usr/local
+                if ! (grep -qs '/usr/local ' /proc/mounts;) then
                     ocf_log err "Error. Can't mount glusterfs partition."
                     exit $OCF_ERR_GENERIC
                 fi
@@ -121,7 +115,9 @@ urbackup_start()
 
         service urbackupclientbackend start
 
-	urbackup_status
+        sleep 3
+        urbackup_status
+        retVal=$?
         if [ $retVal -eq $OCF_NOT_RUNNING ]; then
                 ocf_log err "Error. urbackup daemon returned error $?."
                 exit $OCF_ERR_GENERIC
@@ -135,10 +131,11 @@ urbackup_start()
 urbackup_stop()
 {
         if urbackup_status ; then
-		service urbackupclientbackend stop
-		urbackup_status
-        	if [ $retVal -eq $OCF_SUCCESS ]; then
-                	ocf_log err "Error. Could not stop urbackup daemon."
+                service urbackupclientbackend stop
+                urbackup_status
+                retVal=$?
+                if [ $retVal -eq $OCF_SUCCESS ]; then
+                        ocf_log err "Error. Could not stop urbackup daemon."
                         return $OCF_ERR_GENERIC
                 fi
         fi
