@@ -16,3 +16,7 @@ samba_vip_netmask=24
 samba_vipbkp_ip=192.168.1.246
 samba_vipbkp_netmask=24
 cluster_name=samba
+ltb_token=Uz2@10TI
+ltb_binddn=cn=Administrator,cn=Users,dc=uz,dc=intranet
+ltb_bindpw=Uz2@21TI
+ltb_base=dc=uz,dc=intranet
