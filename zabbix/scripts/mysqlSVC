@@ -152,18 +152,18 @@ mysql_start()
                 COMMAND="service mysql start"
         fi
 
+        if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql
+                if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount glusterfs partition."
+                    exit $OCF_ERR_GENERIC
+                fi
+        fi
+
         HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary| grep -A2 "Brick $HOSTNAME"|grep "Total Number of entries: 0"|wc -l)
         if [ $HEALTHY_BRICKS != 1 ]; then
                 ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
                 exit $OCF_ERR_GENERIC
-        fi
-
-	if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql
-		if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount glusterfs partition."
-                    exit $OCF_ERR_GENERIC
-		fi
         fi
 
 	is_isolation
