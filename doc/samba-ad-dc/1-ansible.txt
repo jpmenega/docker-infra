@@ -30,6 +30,6 @@ wget https://raw.githubusercontent.com/jpmenega/docker-infra/main/samba-ad-dc/ex
 # share permissions
 https://superuser.com/questions/1459741/samba-ad-dc-windows-explorer-exe-crashes-on-security-tab-access
 samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
-samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /usr/lib/samba/volumes/
+samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/volumes/
 
 ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/self-service-password.yml

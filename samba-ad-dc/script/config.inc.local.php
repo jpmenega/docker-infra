@@ -24,4 +24,6 @@ $mail_smtp_host = 'localhost';
 $mail_smtp_user = '';
 $mail_smtp_pass = '';
 $mail_smtp_port = 25;
+
+$background_image = "images/unsplash-sky.jpeg"
 ?>
