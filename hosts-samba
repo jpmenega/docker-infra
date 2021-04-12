@@ -20,3 +20,9 @@ ltb_token=Uz2@10TI
 ltb_binddn=cn=Administrator,cn=Users,dc=uz,dc=intranet
 ltb_bindpw=Uz2@21TI
 ltb_base=dc=uz,dc=intranet
+ltb_mail_from=uzcapivari@gmail.com
+ltb_mail_from_name=UZ Intranet - Reset de senha
+ltb_mail_smtp_host=smtp.gmail.com
+ltb_mail_smtp_user=uzcapivari@gmail.com
+ltb_mail_smtp_pass=Wbrgaihu01!
+ltb_mail_smtp_port=587
