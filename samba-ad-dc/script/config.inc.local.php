@@ -9,5 +9,8 @@ $ad_mode = true;
 $ad_options['force_unlock'] = true;
 $ad_options['change_expired_password'] = true;
 $who_change_password = "manager";
+$use_questions = false;
+$use_sms = false;
+$lang = "pt-BR";
 
 ?>
