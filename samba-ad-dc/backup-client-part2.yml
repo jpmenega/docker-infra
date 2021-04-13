@@ -12,7 +12,7 @@
         enabled: no
 
     - name: Download crm urbackup script
-      shell: "wget {{ git_source }}/samba-ad-dc/script/urbackup"
+      shell: "wget {{ git_source }}/samba-ad-dc/scripts/urbackup"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/urbackup

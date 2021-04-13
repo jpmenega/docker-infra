@@ -43,7 +43,7 @@
         state: directory
 
     - name: Download crm samba script
-      shell: "wget {{ git_source }}/samba-ad-dc/script/samba"
+      shell: "wget {{ git_source }}/samba-ad-dc/scripts/samba"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/samba
