@@ -1,0 +1,40 @@
+#https://github.com/uroni/urbackup-server-python-web-api-wrapper
+- hosts: all
+  become: yes
+  tasks:
+    - name: "Install python3-pip"
+      apt:
+       name: python3-pip
+       state: present
+       update_cache: true
+
+    - name: "Install UrBackup Python API"
+      pip:
+        name: urbackup-server-web-api-wrapper
+
+    - name: Download backup status Zabbix script
+      get_url:
+        url: "{{ git_source }}/backup/scripts/zabbix/backup_status.py"
+        dest: /etc/zabbix
+
+    - name: "Configure script credentials - user"
+      ansible.builtin.replace:
+        path: /etc/zabbix/backup_status.py
+        regexp: '<user>'
+        replace: '{{ backup_monitor_user }}'
+
+    - name: "Configure script credentials - password"
+      ansible.builtin.replace:
+        path: /etc/zabbix/backup_status.py
+        regexp: '<password>'
+        replace: '{{ backup_monitor_password }}'
+
+    - name: Download backup status Zabbix config
+      get_url:
+        url: "{{ git_source }}/backup/scripts/zabbix/urbackup.conf"
+        dest: /etc/zabbix/zabbix_agentd.d
+
+    - name: Restart zabbix-agent
+      service:
+        name: zabbix-agent.service
+        state: restarted

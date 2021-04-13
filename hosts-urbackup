@@ -10,3 +10,5 @@ zabbix_server_address=192.168.1.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=urbackup01
 backup_storage_nfs=192.168.1.2:/urbackup
+backup_monitor_user=zabbix
+backup_monitor_password=pED4zKs2GNnmtWGM
