@@ -9,3 +9,4 @@ zabbix_agent_package_name=zabbix-release_5.2-1+ubuntu20.04_all.deb
 zabbix_server_address=192.168.1.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=urbackup01
+backup_storage_nfs=192.168.1.2:/urbackup

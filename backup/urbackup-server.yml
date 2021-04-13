@@ -1,0 +1,56 @@
+#https://www.urbackup.org/administration_manual.html#x1-60002.1.2
+- hosts: all
+  become: yes
+  tasks:
+    - name: Add UrBackup repository
+      apt_repository:
+        repo: 'ppa:uroni/urbackup'
+
+    - name: "Install nfs-common"
+      apt:
+       name: nfs-common
+       state: present
+       update_cache: true
+
+    - name: Install UrBackup
+      command: apt-get install -y urbackup-server
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Stop urbackupsrv
+      service:
+        name: urbackupsrv.service
+        state: stopped
+
+    - name: Mount NFS volume (if mounted)
+      ansible.posix.mount:
+        path: /media/BACKUP/urbackup
+        state: unmounted
+
+    - name: Delete /media/BACKUP/urbackup
+      file:
+        state: absent
+        path: /media/BACKUP/urbackup
+
+    - name: Recreate /media/BACKUP/urbackup
+      file:
+        path: /media/BACKUP/urbackup
+        state: directory
+
+    - name: Ensure we have NFS starogate in /etc/fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^{{ backup_storage_nfs }}'
+        line: '{{ backup_storage_nfs }}   /media/BACKUP/urbackup  nfs     defaults        0       0'
+
+    - name: Mount NFS volume
+      command: mount /media/BACKUP/urbackup
+
+    - name: Restore UrBackup backup
+      command: cp /media/BACKUP/urbackup/urbackup/* /var/urbackup/
+
+    - name: Start urbackupsrv
+      service:
+        name: urbackupsrv.service
+        state: started
+
