@@ -1,0 +1,31 @@
+zabbix_export:
+  version: '5.2'
+  date: '2021-04-13T20:13:11Z'
+  groups:
+    -
+      name: Templates
+  templates:
+    -
+      template: 'UrBackup Python Script'
+      name: 'UrBackup Python Script'
+      groups:
+        -
+          name: Templates
+      applications:
+        -
+          name: Backup
+      items:
+        -
+          name: 'Backup status'
+          key: urbackup.status
+          delay: 1h
+          trends: '0'
+          value_type: CHAR
+          applications:
+            -
+              name: Backup
+          triggers:
+            -
+              expression: '{last()}<>"OK"'
+              name: 'Backup fail'
+              priority: HIGH
