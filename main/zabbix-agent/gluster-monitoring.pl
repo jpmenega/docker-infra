@@ -83,7 +83,7 @@ my $result = `gluster peer status --xml`;
 }
 
 case "heal-info" {
-my $result = `gluster volume heal $ARGV[1] info --xml`;
+my $result = `gluster volume heal $ARGV[1] info |grep "Number of entries:"|grep -v "Number of entries: 0"|wc -l`;
 
     print $result;
 

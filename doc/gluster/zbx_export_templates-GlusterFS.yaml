@@ -1,0 +1,389 @@
+zabbix_export:
+  version: '5.2'
+  date: '2021-04-14T19:29:05Z'
+  groups:
+    -
+      name: 'Samba Servers'
+    -
+      name: Templates
+  templates:
+    -
+      template: 'Template GlusterFS disks'
+      name: 'Template GlusterFS disks'
+      description: 'Monitor GlusterFS via gluster'
+      groups:
+        -
+          name: 'Samba Servers'
+        -
+          name: Templates
+      applications:
+        -
+          name: Gluster
+        -
+          name: 'Gluster raw items'
+      items:
+        -
+          name: 'Gluster peers status'
+          key: peers.status
+          delay: 5m
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          applications:
+            -
+              name: 'Gluster raw items'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 6h
+      discovery_rules:
+        -
+          name: 'Gluster volumes'
+          key: gluster.discovery
+          delay: 1h
+          lifetime: 3d
+          item_prototypes:
+            -
+              name: 'Gluster bricks free size'
+              type: DEPENDENT
+              key: 'gluster.bricks.free[{#NAME}]'
+              delay: '0'
+              history: 30d
+              trends: 90d
+              units: B
+              description: 'Total free size of active bricks.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(sum(/cliOutput/volStatus/volumes/volume/node/sizeFree))
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+            -
+              name: 'Gluster bricks inodes free'
+              type: DEPENDENT
+              key: 'gluster.bricks.inodesFree[{#NAME}]'
+              delay: '0'
+              history: 30d
+              trends: 90d
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(sum(/cliOutput/volStatus/volumes/volume/node/inodesFree))
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+            -
+              name: 'Gluster bricks inodes total'
+              type: DEPENDENT
+              key: 'gluster.bricks.inodesTotal[{#NAME}]'
+              delay: '0'
+              history: 30d
+              trends: 90d
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(sum(/cliOutput/volStatus/volumes/volume/node/inodesTotal))
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+            -
+              name: 'Gluster bricks total size'
+              type: DEPENDENT
+              key: 'gluster.bricks.size[{#NAME}]'
+              delay: '0'
+              history: 30d
+              trends: 90d
+              units: B
+              description: 'Total size of active bricks.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(sum(/cliOutput/volStatus/volumes/volume/node/sizeTotal))
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+            -
+              name: 'Gluster volume bricks count'
+              type: DEPENDENT
+              key: 'gluster.volume.brickCount[{#NAME}]'
+              delay: '0'
+              history: 3d
+              trends: '0'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(/cliOutput/volInfo/volumes/volume/brickCount)
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[info,{#NAME}]'
+            -
+              name: 'Gluster volume bricks active count'
+              type: DEPENDENT
+              key: 'gluster.volume.bricks.status[{#NAME}]'
+              delay: '0'
+              history: 30d
+              trends: 90d
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - sum(/cliOutput/volStatus/volumes/volume/node/status)
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+            -
+              name: 'Gluster volume free size'
+              type: CALCULATED
+              key: 'gluster.volume.free[{#NAME}]'
+              delay: 5m
+              history: 30d
+              trends: 90d
+              units: B
+              params: 'last(gluster.bricks.free[{#NAME}]) / last(gluster.volume.replicaCount[{#NAME}])'
+              description: 'Total bricks free size / replica count.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+            -
+              name: 'Gluster volume inodes free'
+              type: CALCULATED
+              key: 'gluster.volume.inodesFree[{#NAME}]'
+              delay: 5m
+              history: 30d
+              trends: 90d
+              params: 'last(gluster.bricks.inodesFree[{#NAME}]) / last(gluster.volume.replicaCount[{#NAME}])'
+              description: 'Total bricks inodes free / replica count.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+            -
+              name: 'Gluster volume inodes'
+              type: CALCULATED
+              key: 'gluster.volume.inodes[{#NAME}]'
+              delay: 1h
+              history: 30d
+              trends: 90d
+              params: 'last(gluster.bricks.inodesTotal[{#NAME}]) / last(gluster.volume.replicaCount[{#NAME}])'
+              description: 'Total bricks inodes / replica count.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+            -
+              name: 'Gluster volume replica count'
+              type: DEPENDENT
+              key: 'gluster.volume.replicaCount[{#NAME}]'
+              delay: '0'
+              history: 3d
+              trends: '0'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - number(/cliOutput/volInfo/volumes/volume/replicaCount)
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[info,{#NAME}]'
+            -
+              name: 'Gluster volume size'
+              type: CALCULATED
+              key: 'gluster.volume.size[{#NAME}]'
+              delay: 1h
+              history: 30d
+              trends: 90d
+              units: B
+              params: 'last(gluster.bricks.size[{#NAME}]) / last(gluster.volume.replicaCount[{#NAME}])'
+              description: 'Total bricks size / replica count.'
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+            -
+              name: 'Gluster volume status'
+              type: DEPENDENT
+              key: 'gluster.volume.status[{#NAME}]'
+              delay: '0'
+              history: 3d
+              trends: '0'
+              value_type: CHAR
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - /cliOutput/volInfo/volumes/volume/statusStr/text()
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: 'gluster.volume[info,{#NAME}]'
+              trigger_prototypes:
+                -
+                  expression: '{str(Started)}=0'
+                  name: 'Volume {#NAME} not Started'
+                  priority: AVERAGE
+            -
+              name: 'Gluster volume heal pending {#NAME}'
+              key: 'gluster.volume[heal-info,{#NAME}]'
+              delay: 5m
+              history: 1d
+              trends: '0'
+              value_type: TEXT
+              applications:
+                -
+                  name: Gluster
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>0'
+                  name: 'Volume {#NAME} has heal pending'
+                  priority: HIGH
+            -
+              name: 'Gluster volume info {#NAME}'
+              key: 'gluster.volume[info,{#NAME}]'
+              delay: 1h
+              history: 1d
+              trends: '0'
+              value_type: TEXT
+              applications:
+                -
+                  name: 'Gluster raw items'
+              preprocessing:
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 12h
+            -
+              name: 'Gluster volume status {#NAME}'
+              key: 'gluster.volume[status,{#NAME}]'
+              delay: 5m
+              history: 1d
+              trends: '0'
+              value_type: TEXT
+              applications:
+                -
+                  name: 'Gluster raw items'
+          trigger_prototypes:
+            -
+              expression: '{Template GlusterFS disks:gluster.volume.brickCount[{#NAME}].last()} <> {Template GlusterFS disks:gluster.volume.bricks.status[{#NAME}].last()}'
+              name: 'Brick in Volume {#NAME} Offline'
+              opdata: 'Bricks active: {ITEM.LASTVALUE2} of {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Count active bricks is differ from total count.'
+            -
+              expression: '{Template GlusterFS disks:gluster.volume.inodesFree[{#NAME}].last()} / {Template GlusterFS disks:gluster.volume.inodes[{#NAME}].last()} * 100 < 10'
+              name: 'Free inodes is less than 10% on volume {#NAME}'
+              priority: HIGH
+            -
+              expression: '{Template GlusterFS disks:gluster.volume.free[{#NAME}].last()} / {Template GlusterFS disks:gluster.volume.size[{#NAME}].last()} * 100 < {$GLUSTER.FS.PFREE.MIN.WARN}'
+              name: 'Free volume ( {#NAME}) size is less then {$GLUSTER.FS.PFREE.MIN.WARN}%'
+              opdata: 'Space free: {ITEM.LASTVALUE1} from {ITEM.LASTVALUE2}'
+              priority: WARNING
+        -
+          name: 'Gluster peers'
+          key: pool.discovery
+          delay: 1h
+          lifetime: 3d
+          item_prototypes:
+            -
+              name: 'Peer {#HOSTNAME} connected status'
+              type: DEPENDENT
+              key: 'gluster.peer.connected[{#UUID}]'
+              delay: '0'
+              applications:
+                -
+                  name: Gluster
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - 'string(/cliOutput/peerStatus/peer[uuid="{#UUID}"]/connected)'
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: peers.status
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>1'
+                  name: 'Gluster peer {#HOSTNAME} disconnected'
+                  opdata: 'Status: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+            -
+              name: 'Peer state {#HOSTNAME}'
+              type: DEPENDENT
+              key: 'gluster.peer.state[{#UUID}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              applications:
+                -
+                  name: Gluster
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - 'string(/cliOutput/peerStatus/peer[uuid="{#UUID}"]/stateStr)'
+                -
+                  type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 6h
+              master_item:
+                key: peers.status
+      macros:
+        -
+          macro: '{$GLUSTER.FS.PFREE.MIN.WARN}'
+          value: '15'
+          description: 'Free space percent'
