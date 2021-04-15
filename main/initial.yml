@@ -25,6 +25,16 @@
 #        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
 #        replace: '# \1'
 
+    - name: Stop multipathd
+      service:
+        name: multipathd.service
+        state: stopped
+
+    - name: Disable service multipathd
+      service:
+        name: multipathd.service
+        enabled: no
+
     - name: Set timezone to UTC
       when: ansible_date_time.tz != 'America/Sao_Paulo'
       command: timedatectl set-timezone America/Sao_Paulo
