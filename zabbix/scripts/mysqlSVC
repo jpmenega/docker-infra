@@ -160,7 +160,7 @@ mysql_start()
                 fi
         fi
 
-        HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary| grep -A2 "Brick $HOSTNAME"|grep "Total Number of entries: 0"|wc -l)
+        HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary | grep -A4 "Brick $HOSTNAME"|grep "Number of entries in split-brain: 0"|wc -l)
         if [ $HEALTHY_BRICKS != 1 ]; then
                 ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
                 exit $OCF_ERR_GENERIC
