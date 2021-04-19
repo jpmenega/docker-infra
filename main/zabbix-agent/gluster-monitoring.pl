@@ -66,6 +66,10 @@ print "}\n";
 
 case "status" {
 my $result = `gluster volume status $ARGV[1] detail --xml`;
+    #try again if last operation return error
+    if (index($result, "<opRet>0</opRet>") == -1) {
+        $result = `gluster volume status $ARGV[1] detail --xml`;
+    }
 
     print $result;
 
@@ -73,6 +77,10 @@ my $result = `gluster volume status $ARGV[1] detail --xml`;
 
 case "info" {
 my $result = `gluster volume info $ARGV[1] --xml`;
+    #try again if last operation return error
+    if (index($result, "<opRet>0</opRet>") == -1) {
+        $result = `gluster volume info $ARGV[1] --xml`;
+    }
 
     print $result;
 
@@ -80,6 +88,10 @@ my $result = `gluster volume info $ARGV[1] --xml`;
 
 case "peers-status" {
 my $result = `gluster peer status --xml`;
+    #try again if last operation return error
+    if (index($result, "<opRet>0</opRet>") == -1) {
+        $result = `gluster peer status --xml`;
+    }
 
     print $result;
 
@@ -87,6 +99,10 @@ my $result = `gluster peer status --xml`;
 
 case "heal-info" {
 my $result = `gluster volume heal $ARGV[1] info |grep "Number of entries:"|grep -v "Number of entries: 0"|wc -l`;
+    #try again if last operation return error
+    if (index($result, "<opRet>0</opRet>") == -1) {
+        $result = `gluster volume heal $ARGV[1] info |grep "Number of entries:"|grep -v "Number of entries: 0"|wc -l`;
+    }
 
     print $result;
 
