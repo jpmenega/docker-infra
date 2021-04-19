@@ -17,6 +17,8 @@ print "\t\"data\":[\n\n";
 
 
 my $result = `gluster volume list`;
+my $hostname = `hostname`;
+$hostname =~ s/\R//g; #remove return char in the end of the string
 
 my @lines = split /\n/, $result;
 foreach my $l (@lines) {
@@ -26,6 +28,7 @@ foreach my $l (@lines) {
                 $first = 0;
 
                 print "\t{\n";
+                print "\t\t\"{#HOSTNAME}\":\"$hostname\",\n";
                 print "\t\t\"{#NAME}\":\"$stat[0]\"\n";
                 print "\t}";
 }
@@ -63,21 +66,21 @@ print "}\n";
 
 case "status" {
 my $result = `gluster volume status $ARGV[1] detail --xml`;
-        
+
     print $result;
 
 }
 
 case "info" {
 my $result = `gluster volume info $ARGV[1] --xml`;
-        
+
     print $result;
 
 }
 
 case "peers-status" {
 my $result = `gluster peer status --xml`;
-        
+
     print $result;
 
 }
@@ -90,4 +93,3 @@ my $result = `gluster volume heal $ARGV[1] info |grep "Number of entries:"|grep 
 }
 
 }
-

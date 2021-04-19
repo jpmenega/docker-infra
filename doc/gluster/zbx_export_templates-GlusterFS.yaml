@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2021-04-14T19:29:05Z'
+  date: '2021-04-19T01:01:56Z'
   groups:
     -
       name: 'Samba Servers'
@@ -314,6 +314,31 @@ zabbix_export:
               applications:
                 -
                   name: 'Gluster raw items'
+            -
+              name: 'Gluster volume {#NAME} peer status'
+              type: DEPENDENT
+              key: 'gluster.volume[status2,{#NAME}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              applications:
+                -
+                  name: Gluster
+              application_prototypes:
+                -
+                  name: 'Gluster vol: {#NAME}'
+              preprocessing:
+                -
+                  type: XMLPATH
+                  parameters:
+                    - '//node[hostname/text() = "{#HOSTNAME}"]/status/text()'
+              master_item:
+                key: 'gluster.volume[status,{#NAME}]'
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>1'
+                  name: 'Gluster volume peer {#HOSTNAME} fail for {#NAME}'
+                  priority: HIGH
           trigger_prototypes:
             -
               expression: '{Template GlusterFS disks:gluster.volume.brickCount[{#NAME}].last()} <> {Template GlusterFS disks:gluster.volume.bricks.status[{#NAME}].last()}'
@@ -324,11 +349,13 @@ zabbix_export:
             -
               expression: '{Template GlusterFS disks:gluster.volume.inodesFree[{#NAME}].last()} / {Template GlusterFS disks:gluster.volume.inodes[{#NAME}].last()} * 100 < 10'
               name: 'Free inodes is less than 10% on volume {#NAME}'
+              status: DISABLED
               priority: HIGH
             -
               expression: '{Template GlusterFS disks:gluster.volume.free[{#NAME}].last()} / {Template GlusterFS disks:gluster.volume.size[{#NAME}].last()} * 100 < {$GLUSTER.FS.PFREE.MIN.WARN}'
               name: 'Free volume ( {#NAME}) size is less then {$GLUSTER.FS.PFREE.MIN.WARN}%'
               opdata: 'Space free: {ITEM.LASTVALUE1} from {ITEM.LASTVALUE2}'
+              status: DISABLED
               priority: WARNING
         -
           name: 'Gluster peers'
