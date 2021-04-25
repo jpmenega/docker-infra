@@ -12,11 +12,6 @@
         name: systemd-resolved.service
         state: stopped
 
-    - name: Disable service apache2
-      service:
-        name: apache2.service
-        enabled: no
-
     - name: Remove resolv.conf managed
       ansible.builtin.file:
         path: /etc/resolv.conf
@@ -46,6 +41,11 @@
        name: zabbix-apache-conf
        state: present
        update_cache: true
+
+    - name: Disable service apache2
+      service:
+        name: apache2.service
+        enabled: no
 
     - name: Create Zabbix Home
       file:
