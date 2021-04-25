@@ -1,3 +1,22 @@
+CONFIGURAR SLACK BOT
+acessar https://api.slack.com/apps e criar app Zabbix para o workspace do cliente
+clicar em Bots
+depois botao Review Scopes to Add
+botao Add an OAuth Scope e adicionar
+     chat:write
+     im:write
+     groups:write
+botao  Install to Workspace
+copiar token e colar no media type do Zabbix
+criar canal <empresa>-monitor
+adicionar app Zabbix no canal criado
+no Zabbix criar variavel global {$ZABBIX.URL} com a URL do Zabbix
+
+ZABBIX SCRIPT
+-substituir a funcao getPermalink (bug do GET)
+-substituir todas as variaveis que se iniciam com __ por __<cliente>_ e __<mc>_ com excecao de /__.+?:(.+?,|.+)/g
+-fora do script existem os campos "Menu entry name" e "Menu entry URL", substituir o __ tambem
+
 function getPermalink(channelId, messageTimestamp) {
     var req = new CurlHttpRequest();
 
@@ -17,9 +36,3 @@ function getPermalink(channelId, messageTimestamp) {
 
     return resp.permalink;
 }
-
--substituir a funcao getPermalink (bug do GET)
--substituir todas as variaveis que se iniciam com __ por __<cliente>_ e __<mc>_ com excecao de /__.+?:(.+?,|.+)/g
--fora do script existem os campos "Menu entry name" e "Menu entry URL", substituir o __ tambem
-
-
