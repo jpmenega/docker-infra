@@ -1,0 +1,25 @@
+function getPermalink(channelId, messageTimestamp) {
+    var req = new CurlHttpRequest();
+
+    req.AddHeader('Content-Type: application/x-www-form-urlencoded; charset=utf-8');
+    req.AddHeader('Authorization: Bearer ' + params.bot_token);
+
+    var formBody = [];
+    formBody.push("channel=" + encodeURIComponent(channelId));
+    formBody.push("message_ts=" + encodeURIComponent(messageTimestamp));
+    formBody = formBody.join("&");
+
+    var resp = JSON.parse(req.Post(Slack.getPermalink, formBody));
+
+    if (req.Status != 200 && !resp.ok) {
+        throw resp.error;
+    }
+
+    return resp.permalink;
+}
+
+-substituir a funcao getPermalink (bug do GET)
+-substituir todas as variaveis que se iniciam com __ por __<cliente>_ e __<mc>_ com excecao de /__.+?:(.+?,|.+)/g
+-fora do script existem os campos "Menu entry name" e "Menu entry URL", substituir o __ tambem
+
+
