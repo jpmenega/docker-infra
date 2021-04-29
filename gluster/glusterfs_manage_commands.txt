@@ -10,6 +10,11 @@ gluster volume heal volume-zabbix split-brain source-brick zabbix01:/gfs/zabbix
 #healing pela maior data
 gluster volume heal volume-samba split-brain latest-mtime /wins.ldb
 
+#dicas ******
+eh possivel remover o arquivo fisico do brick que vamos descartar
+dai faz um touch no(s) arquivo(s) da pasta logica montada
+e em seguida roda o healing pela origem
+
 #montar com permissoes para ver os GFID
 mount -t glusterfs -o aux-gfid-mount localhost:volume-zabbix /var/lib/mysql
 #mostrar qual é o arquivo referente ao GFID
