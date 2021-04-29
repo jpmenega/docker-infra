@@ -32,6 +32,21 @@
         name: samba-ad-dc.service
         state: stopped
 
+    - name: Disable service windbind
+      service:
+        name: winbind.service
+        enabled: no
+
+    - name: Disable service smbd
+      service:
+        name: smbd.service
+        enabled: no
+
+    - name: Disable service nmbd
+      service:
+        name: nmbd.service
+        enabled: no
+
     - name: Delete Samba data folder
       file:
         state: absent
