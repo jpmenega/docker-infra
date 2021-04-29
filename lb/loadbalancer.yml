@@ -59,6 +59,16 @@
        chdir: $HOME
        creates: lb-corosync-conf.txt
 
+    - name: Download pacemaker.conf
+      get_url:
+        url: "{{ git_source }}/lb/configs/pacemaker.conf"
+        dest: /etc/zabbix/zabbix_agentd.d
+
+    - name: Download zbx_pacemaker sudoers
+      get_url:
+        url: "{{ git_source }}/lb/configs/zbx_pacemaker"
+        dest: /etc/sudoers.d
+
 #    - name: Download haproxy.cfg
 #      shell: "wget {{ git_source }}/lb/taint/haproxy.cfg; mv haproxy.cfg /etc/haproxy > lb-haproxy-cfg.txt"
 #      args:
