@@ -1,0 +1,37 @@
+#!/bin/bash
+echo "Create snapshot" > /tmp/urbackup.log
+gluster snapshot create snap-backup volume-samba no-timestamp
+echo "Activate snapshot" >> /tmp/urbackup.log
+gluster snapshot activate snap-backup
+echo "Mount snapshot" >> /tmp/urbackup.log
+mount -t glusterfs localhost:/snaps/snap-backup/volume-samba /mnt/samba
+if ! (grep -qs '/mnt/samba ' /proc/mounts;) then
+        echo "Snapshot fail"
+
+        echo y|gluster snapshot deactivate snap-backup
+        echo y|gluster snapshot delete snap-backup
+
+        exit 1
+fi
+
+echo "Create snapshot shares" >> /tmp/urbackup.log
+gluster snapshot create snap-backup-shares volume-shares no-timestamp
+echo "Activate snapshot shares" >> /tmp/urbackup.log
+gluster snapshot activate snap-backup-shares
+echo "Mount snapshot shares" >> /tmp/urbackup.log
+mount -t glusterfs localhost:/snaps/snap-backup-shares/volume-shares /mnt/shares
+if ! (grep -qs '/mnt/shares ' /proc/mounts;) then
+        echo "Snapshot shares fail"
+
+        echo y|gluster snapshot deactivate snap-backup
+        echo y|gluster snapshot delete snap-backup
+
+        echo y|gluster snapshot deactivate snap-backup-shares
+        echo y|gluster snapshot delete snap-backup-shares
+
+        exit 1
+fi
+
+echo "Success snapshot" >> /tmp/urbackup.log
+echo "Snapshot success"
+exit 0

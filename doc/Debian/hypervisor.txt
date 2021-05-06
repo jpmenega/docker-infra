@@ -1,0 +1,51 @@
+Debian
+
+#text init mode
+sudo systemctl set-default multi-user.target
+sudo systemctl get-default
+sudo reboot
+
+
+
+#install KVM - https://www.linuxtechi.com/install-configure-kvm-debian-10-buster/
+
+egrep -c '(vmx|svm)' /proc/cpuinfo    ==> great than zero
+grep -E --color '(vmx|svm)' /proc/cpuinfo   ==> vmx=intel  svm=amd
+
+sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon virt-manager -y
+
+sudo systemctl status libvirtd.service
+
+virsh net-list --all
+virsh net-start default
+virsh net-autostart default
+modprobe vhost_net
+echo "vhost_net" | sudo  tee -a /etc/modules
+lsmod | grep vhost
+
+sudo vi /etc/network/interfaces
+-----------------
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto eno1
+iface eno1 inet manual
+
+auto br0
+iface br0 inet static
+        address 192.168.16.100
+        netmask 255.255.255.0
+        network 192.168.16.0
+        broadcast 192.168.16.255
+        gateway 192.168.16.1
+        bridge_ports eno1
+        bridge_stp off
+        bridge_fd 0
+        bridge_maxwait 0
+        dns-nameservers 192.168.16.1
+------------------------

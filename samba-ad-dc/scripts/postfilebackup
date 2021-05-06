@@ -1,0 +1,18 @@
+#!/bin/bash
+echo "umount snapshot" >> /tmp/urbackup.log
+umount /mnt/samba
+echo "deactivate snapshot" >> /tmp/urbackup.log
+echo y|gluster snapshot deactivate snap-backup
+echo "delete snapshot" >> /tmp/urbackup.log
+echo y|gluster snapshot delete snap-backup
+
+echo "umount snapshot shares" >> /tmp/urbackup.log
+umount /mnt/shares
+echo "deactivate snapshot shares" >> /tmp/urbackup.log
+echo y|gluster snapshot deactivate snap-backup-shares
+echo "delete snapshot shares" >> /tmp/urbackup.log
+echo y|gluster snapshot delete snap-backup-shares
+
+echo "done" >> /tmp/urbackup.log
+exit 0
+

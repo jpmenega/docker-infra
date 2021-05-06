@@ -1,4 +1,4 @@
-#virt-install --virt-type=kvm --name samba-ad-dc02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/samba-ad-dc02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc02-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
+#virt-install --virt-type=kvm --name samba-ad-dc02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/samba-ad-dc02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc02-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc02-glusterfs-shares.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
 
 #ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
 
@@ -16,7 +16,9 @@ VNC     #ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
 ------------------
 
 Create an attach new disk
-#qemu-img create -f qcow2 ubuntu-workernode03-glusterfs-samba.qcow2 1T
+#qemu-img create -f qcow2 /var/lib/libvirt/images/samba-ad-dc02-glusterfs-shares.qcow2 1T
+#virsh edit <domain>
+#or
 #virsh attach-disk ubuntu-masternode03 \
 --source /var/lib/libvirt/images/ubuntu-workernode03-glusterfs-samba.qcow2 \
 --target vdc \

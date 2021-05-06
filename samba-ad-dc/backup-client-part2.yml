@@ -11,6 +11,28 @@
         name: urbackupclientbackend.service
         enabled: no
 
+    - name: Download pre UrBackup job script
+      get_url:
+        url: "{{ git_source }}/samba-ad-dc/scripts/prefilebackup"
+        dest: /usr/local/etc/urbackup/
+
+    - name: change pre UrBackup job script permission
+      file:
+        path: /usr/local/etc/urbackup/prefilebackup
+        state: touch
+        mode: "u+rwx,g-rwx,o-rwx"
+
+    - name: Download post UrBackup job script
+      get_url:
+        url: "{{ git_source }}/samba-ad-dc/scripts/postfilebackup"
+        dest: /usr/local/etc/urbackup/
+
+    - name: change post UrBackup job script permission
+      file:
+        path: /usr/local/etc/urbackup/postfilebackup
+        state: touch
+        mode: "u+rwx,g-rwx,o-rwx"
+
     - name: Download crm urbackup script
       shell: "wget {{ git_source }}/samba-ad-dc/scripts/urbackup"
       args:

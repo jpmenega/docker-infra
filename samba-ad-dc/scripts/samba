@@ -230,6 +230,14 @@ samba_start()
                 fi
         fi
 
+        if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
+                mount -t glusterfs -o acl localhost:volume-shares /var/lib/samba-shares
+                if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount glusterfs partition."
+                    exit $OCF_ERR_GENERIC
+                fi
+        fi
+
         samba_setup
 
         $COMMAND -s $CONF_FILE;

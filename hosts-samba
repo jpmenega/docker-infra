@@ -11,6 +11,7 @@ zabbix_server_address=192.168.1.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=samba-ad-dc01
 gluster_replica=replica 2 samba-ad-dc01:/gfs/samba samba-ad-dc02:/gfs/samba
+gluster_replica_shares=replica 2 samba-ad-dc01:/gfs/samba_shares samba-ad-dc02:/gfs/samba_shares
 samba_vip_ip=192.168.1.249
 samba_vip_netmask=24
 samba_vipbkp_ip=192.168.1.246

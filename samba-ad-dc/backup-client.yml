@@ -1,6 +1,16 @@
 - hosts: all
   become: yes
   tasks:
+    - name: Create mnt-samba folder for snapshot
+      file:
+        path: /mnt/samba
+        state: directory
+
+    - name: Create mnt-shares folder for snapshot
+      file:
+        path: /mnt/shares
+        state: directory
+
     - name: Move usr-local
       command: mv /usr/local /usr/local-temp
 

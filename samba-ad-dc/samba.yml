@@ -1,7 +1,7 @@
 - hosts: all
   become: yes
   tasks:
-    - name: Create Gluster Samba volume
+    - name: Create Gluster Samba internal volume
       shell: "gluster volume create volume-samba {{ gluster_replica }} force > samba-gluster-volume.txt"
       args:
         chdir: $HOME
@@ -9,7 +9,15 @@
       when: gluster == "yes" and lb_primary == "yes"
       with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
 
-    - name: Start Gluster Samba volume
+    - name: Create Gluster Samba shares volume
+      shell: "gluster volume create volume-shares {{ gluster_replica_shares }} force > samba-gluster-volume-shares.txt"
+      args:
+        chdir: $HOME
+        creates: samba-gluster-volume-shares.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Start Gluster Samba internal volume
       shell: "gluster volume start volume-samba > samba-gluster-start-volume.txt"
       args:
         chdir: $HOME
@@ -17,9 +25,22 @@
       when: gluster == "yes" and lb_primary == "yes"
       with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
 
+    - name: Start Gluster Samba shares volume
+      shell: "gluster volume start volume-shares > samba-gluster-start-volume-shares.txt"
+      args:
+        chdir: $HOME
+        creates: samba-gluster-start-volume-shares.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
     - name: Create Samba data folder
       file:
         path: /var/lib/samba
+        state: directory
+
+    - name: Create Samba shares folder
+      file:
+        path: /var/lib/samba-shares
         state: directory
 
     - name: Install packages
