@@ -1,1 +1,0 @@
-zabbix	ALL=NOPASSWD: /usr/sbin/crm_mon --as-xml
