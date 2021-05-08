@@ -1,6 +1,6 @@
 #zabbix
-Cmnd_Alias MON = /etc/zabbix/gluster-monitoring.pl *
+Cmnd_Alias CMDS = /etc/zabbix/gluster-monitoring.pl*, /usr/sbin/crm_mon --as-xml, /usr/sbin/service *
 Defaults:zabbix !requiretty
 Defaults:zabbix !syslog
 
-zabbix ALL = NOPASSWD: MON
+zabbix ALL = NOPASSWD: CMDS
