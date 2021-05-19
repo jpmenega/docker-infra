@@ -123,7 +123,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Configure samba less prefer samba-ad-dc02
-      shell: "crm configure location noprefer-samba sambaSVC 50: samba-ad-dc02 > samba-lb-noprefer.txt"
+      shell: "crm configure location noprefer-samba sambaSVC 5: samba-ad-dc02 > samba-lb-noprefer.txt"
       args:
        chdir: $HOME
        creates: samba-lb-noprefer.txt
@@ -131,7 +131,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Configure samba prefer samba-ad-dc01
-      shell: "crm configure location prefer-samba sambaSVC 5: samba-adc-dc01 > samba-lb-prefer.txt"
+      shell: "crm configure location prefer-samba sambaSVC 50: samba-ad-dc01 > samba-lb-prefer.txt"
       args:
        chdir: $HOME
        creates: samba-lb-prefer.txt
