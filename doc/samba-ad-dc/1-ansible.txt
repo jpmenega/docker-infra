@@ -32,5 +32,9 @@ https://superuser.com/questions/1459741/samba-ad-dc-windows-explorer-exe-crashes
 samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
 samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/volumes/
 
+# reload samba config
+smbcontrol smbd reload-config
+smbstatus #acaba validando o smb.conf
+
 # antes setar a senha do SMTP no hosts-samba (ltb_mail_smtp_pass=)
 ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/self-service-password.yml
