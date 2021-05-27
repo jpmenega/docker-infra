@@ -1,4 +1,7 @@
+#osinfo-query os (to list os-variants)
+(generic26 / debian10)
 #virt-install --virt-type=kvm --name samba-ad-dc02 --ram 4096 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/ubuntu-20.04.1-live-server-amd64.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/samba-ad-dc02.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc02-glusterfs.qcow2,size=1024,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc02-glusterfs-shares.qcow2,size=1024,bus=virtio,format=qcow2 --prompt
+#virt-install --virt-type=kvm --name samba-ad-dc01 --ram 4096 --vcpus=2 --os-variant=debian10 --cdrom=/root/ISO/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/samba-ad-dc01.qcow2,size=20,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc01-glusterfs-samba.qcow2,size=50,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc01-glusterfs-shares.qcow2,size=1024,bus=virtio,format=qcow2 --check disk_size=off
 
 #ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
 

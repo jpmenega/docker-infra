@@ -33,9 +33,22 @@ network:
         - uz.intranet
   version: 2
 -----
+#vim.tiny /etc/network/interfaces
+auto eth0
+iface eth0 inet static
+  address 192.168.16.241
+  netmask 255.255.255.0
+  gateway 192.168.16.1
+  dns-nameservers 192.168.16.1
+
+#vim.tiny /etc/resolv.conf
+search medlav.intranet
+nameserver 192.168.16.1
+----
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
+(Debian) apt-get install thin-provisioning-tools
 *Worker nodes for GlusterFS
 cfdisk /dev/sdb (or vdb)
  old- mkfs -t ext4 /dev/sdb1 (or vdb1)
@@ -51,7 +64,9 @@ cfdisk /dev/sdc (or vdc)
  old- mkfs -t ext4 /dev/sdc1 (or vdc1)
 pvcreate /dev/sdc1 (or vdc1) //pvscan
 vgcreate vg_gluster_shares /dev/sdc1 (or vdc1) //vgdisplay
-lvcreate -L 1023G --thinpool tpool_gluster_shares vg_gluster_shares
+ lvcreate -L 1023G --thinpool tpool_gluster_shares vg_gluster_shares
+ ou
+ lvcreate -L 1023G -c 64k --thinpool tpool_gluster_shares vg_gluster_shares
 //lvcreate -L 1023G -n lv_gluster_samba vg_gluster  //lvdisplay
 lvcreate -V 1023G --thin -n lv_gluster_samba_shares vg_gluster_shares/tpool_gluster_shares
 mkfs.ext4 /dev/mapper/vg_gluster_shares-lv_gluster_samba_shares

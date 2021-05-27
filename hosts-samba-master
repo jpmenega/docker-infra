@@ -1,0 +1,30 @@
+[masters]
+samba-ad-dc01 ansible_host=192.168.15.241 ansible_user=root lb_primary=yes gluster=yes
+#samba-ad-dc02 ansible_host=192.168.15.242 ansible_user=root lb_slave=yes gluster=yes
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+domain_name=uz.intranet
+zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10.tar.gz
+zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10.tar.gz
+zabbix_server_address=192.168.15.0/24
+git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
+master_node_delegate=samba-ad-dc01
+gluster_replica=samba-ad-dc01:/gfs/samba
+gluster_replica_shares=samba-ad-dc01:/gfs/samba_shares
+samba_vip_ip=192.168.16.249
+samba_vip_netmask=24
+samba_vipbkp_ip=192.168.16.246
+samba_vipbkp_netmask=24
+cluster_name=samba
+ltb_token=M3dl@vTok3n
+ltb_binddn=cn=Administrator,cn=Users,dc=uz,dc=intranet
+ltb_bindpw=M3dl@vP
+ltb_base=dc=uz,dc=intranet
+ltb_mail_from=medlav.mostlycloudy@gmail.com
+ltb_mail_from_name=Medlav Intranet - Reset de senha
+ltb_mail_smtp_host=smtp.gmail.com
+ltb_mail_smtp_user=medlav.mostlycloudy@gmail.com
+ltb_mail_smtp_pass=<password>
+ltb_mail_smtp_port=587
+company_logo=http://www.uz.com.br/template2/imagens/logo_menor.jpg
