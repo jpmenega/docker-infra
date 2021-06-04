@@ -10,20 +10,22 @@
 #        line: 'ubuntu ALL=(ALL) NOPASSWD: ALL'
 #        validate: 'visudo -cf %s'
 
-    - name: set up authorized keys for the ubuntu user
-      authorized_key: user=ubuntu key="{{item}}"
-      with_file:
-        - ~/.ssh/id_rsa.pub
+#    - name: set up authorized keys for the ubuntu user
+#      authorized_key: user=ubuntu key="{{item}}"
+#      with_file:
+#        - ~/.ssh/id_rsa.pub
 
     - name: Stop multipathd
       service:
         name: multipathd.service
         state: stopped
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Disable service multipathd
       service:
         name: multipathd.service
         enabled: no
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Set timezone to UTC
       when: ansible_date_time.tz != 'America/Sao_Paulo'
@@ -87,6 +89,12 @@
         creates: gluster.conf
       when: gluster == "yes"
       with_items: "{{ gluster | default([]) }}"
+
+    - name: "Install sudo"
+      apt:
+       name: sudo
+       state: present
+       update_cache: true
 
     - name: zabbix sudoer
       shell: "wget {{ git_source }}/main/zabbix-agent/zabbix"

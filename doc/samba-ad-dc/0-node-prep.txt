@@ -48,15 +48,17 @@ nameserver 192.168.16.1
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
-(Debian) apt-get install thin-provisioning-tools
+(Debian) apt-get install lvm2
 *Worker nodes for GlusterFS
 cfdisk /dev/sdb (or vdb)
  old- mkfs -t ext4 /dev/sdb1 (or vdb1)
 pvcreate /dev/sdb1 (or vdb1) //pvscan
-vgcreate vg_gluster /dev/sdb1 (or vdb1) //vgdisplay
-lvcreate -L 1023G --thinpool tpool_gluster vg_gluster
-//lvcreate -L 1023G -n lv_gluster_samba vg_gluster  //lvdisplay
-lvcreate -V 1023G --thin -n lv_gluster_samba vg_gluster/tpool_gluster
+vgcreate vg_gluster /dev/sdb1 (or vdb1) //vgdisplay (****ver sobre tamanho do extent, para armazenar discos de VMs - arquivo grande -  talvez extents maior que o default de 4MiB sejam melhores)
+ lvcreate -L 49G --thinpool tpool_gluster vg_gluster
+ ou
+ lvcreate -L 49G -c 64k --thinpool tpool_gluster vg_gluster
+//lvcreate -L 49G -n lv_gluster_samba vg_gluster  //lvdisplay
+lvcreate -V 49G --thin -n lv_gluster_samba vg_gluster/tpool_gluster
 mkfs.ext4 /dev/mapper/vg_gluster-lv_gluster_samba
 mkdir -p /gfs/samba
 

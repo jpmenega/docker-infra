@@ -11,15 +11,40 @@
 
    - name: Add Gluster repository from PPA
      apt_repository:
-       repo: 'ppa:gluster/glusterfs-8'
+       repo: 'ppa:gluster/glusterfs-9'
        state: present
-     when: gluster == "yes"
+     when: gluster == "yes" and ansible_distribution == 'Ubuntu'
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: install gnupg2
+     apt:
+        name: gnupg2
+        state: present
+        update_cache: true
+     when: gluster == "yes" and ansible_distribution == 'Debian'
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: Add Gluster repository key
+     shell: "wget -O - https://download.gluster.org/pub/gluster/glusterfs/9/rsa.pub | apt-key add - > gluster-repository-key.txt"
+     args:
+       chdir: $HOME
+       creates: gluster-repository-key.txt
+     when: gluster == "yes" and ansible_distribution == 'Debian'
+     with_items: "{{ gluster | default([]) }}"
+
+   - name: Add Gluster repository
+     shell: "echo deb [arch=amd64] https://download.gluster.org/pub/gluster/glusterfs/9/LATEST/Debian/buster/amd64/apt buster main > /etc/apt/sources.list.d/gluster.list > gluster-repository.txt"
+     args:
+       chdir: $HOME
+       creates: gluster-repository.txt
+     when: gluster == "yes" and ansible_distribution == 'Debian'
      with_items: "{{ gluster | default([]) }}"
 
    - name: install glusterfs-server
      apt:
        name: glusterfs-server
        state: present
+       update_cache: yes
      when: gluster == "yes"
      with_items: "{{ gluster | default([]) }}"
    

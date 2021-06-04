@@ -13,6 +13,13 @@
         state: present
         update_cache: true
 
+    - name: install crmsh
+      apt:
+        name: crmsh
+        state: present
+        update_cache: true
+      when: ansible_distribution == 'Debian'
+
     - name: install haveged
       apt:
         name: haveged
