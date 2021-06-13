@@ -3,22 +3,14 @@ https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Clusters_from_Scr
 https://pt.slideshare.net/fred_m/alta-disponibilidade-utilizando-pacemaker-e-drbd
 https://support.sciencelogic.com/s/article/1176
 
-apt install lvm2
-apt install drbd-utils
+apt install lvm2 drbd-utils
 
 cfdisk /dev/vdb
 pvcreate /dev/vdb1
-vgcreate vg_samba /dev/vdb1 //vgdisplay
-lvcreate -l 100%FREE -c 64k --thinpool tpool_samba vg_samba
+vgcreate vg_drbd_shares /dev/vdb1 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_drbd_shares vg_drbd_shares
 lvs (para mostrar tamanho alocado e usar na linha abaixo)
 ----lvcreate -V 49.89G --thin -n lv_samba vg_samba/tpool_samba
-
-cfdisk /dev/vdc
-pvcreate /dev/vdc1 //pvscan
-vgcreate vg_shares /dev/vdc1 //vgdisplay
-lvcreate -l 100%FREE -c 64k --thinpool tpool_shares vg_shares
-lvs (para mostrar tamanho alocado e usar na linha abaixo)
-----lvcreate -V 99.8G --thin -n lv_shares vg_shares/tpool_shares
 
 /etc/drbd.d/global_common.conf
 	startup {
@@ -35,12 +27,7 @@ resource samba {
         on samba-ad-dc01 {
                 volume 0 {
                         device /dev/drbd0;
-                        disk /dev/vg_samba/tpool_samba;
-                        meta-disk internal;
-                }
-                volume 1 {
-                        device /dev/drbd1;
-                        disk /dev/vg_shares/tpool_shares;
+                        disk /dev/vg_drbd_shares/tpool_drbd_shares;
                         meta-disk internal;
                 }
                 address 192.168.16.241:7788;
@@ -48,12 +35,7 @@ resource samba {
         on samba-ad-dc02 {
                 volume 0 {
                         device /dev/drbd0;
-                        disk /dev/vg_samba/tpool_samba;
-                        meta-disk internal;
-                }
-                volume 1 {
-                        device /dev/drbd1;
-                        disk /dev/vg_shares/tpool_shares;
+                        disk /dev/vg_drbd_shares/tpool_drbd_shares;
                         meta-disk internal;
                 }
                 address 192.168.16.242:7788;
@@ -75,7 +57,6 @@ watch -n1 cat /proc/drbd
 
 #node 1
 mkfs.ext4 -v /dev/drbd0
-mkfs.ext4 -v /dev/drbd1
 
 systemctl disable corosync.service
 systemctl disable pacemaker.service
