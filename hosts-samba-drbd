@@ -1,6 +1,6 @@
 [masters]
-samba-ad-dc01 ansible_host=192.168.16.241 ansible_user=root lb_primary=yes gluster=no device_id=host01
-samba-ad-dc02 ansible_host=192.168.16.242 ansible_user=root lb_slave=yes gluster=no device_id=host02
+samba-ad-dc01 ansible_host=192.168.1.241 ansible_user=root lb_primary=yes gluster=no device_id=host01
+samba-ad-dc02 ansible_host=192.168.1.242 ansible_user=root lb_slave=yes gluster=no device_id=host02
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

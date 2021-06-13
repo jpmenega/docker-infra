@@ -65,6 +65,20 @@
         url: "{{ git_source }}/lb/{{ cluster_name }}/corosync.conf"
         dest: /etc/corosync
 
+    - name: "Configure node IP"
+      ansible.builtin.replace:
+        path: /etc/corosync/corosync.conf
+        regexp: '<{{ hostvars[item].device_id }}>'
+        replace: '{{ hostvars[item].ansible_host }}'
+      when: hostvars[item].ansible_host is defined
+      with_items: "{{ groups['all'] }}"
+
+    - name: "Configure bind addr"
+      ansible.builtin.replace:
+        path: /etc/corosync/corosync.conf
+        regexp: '\    bindnetaddr: <bind_ip>'
+        replace: '    bindnetaddr: {{ samba_vip_ip }}'
+
     - name: Download pacemaker.conf
       get_url:
         url: "{{ git_source }}/lb/configs/pacemaker.conf"
