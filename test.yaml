@@ -1,0 +1,18 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Download corosync.conf
+      get_url:
+        url: "{{ git_source }}/lb/{{ cluster_name }}/corosync.conf"
+        dest: /etc/corosync
+
+    - name: "Build hosts file"
+      lineinfile: dest=/etc/corosync/corosync.conf regexp='.*<{{ hostvars[item].device_id }}>$' line="    ring0_addr: {{ hostvars[item].ansible_host }}" state=present
+      when: hostvars[item].ansible_host is defined
+      with_items: "{{ groups['all'] }}"
+
+    - name: "Configure bind addr"
+      ansible.builtin.replace:
+        path: /etc/corosync/corosync.conf
+        regexp: '\    bindnetaddr: <bind_ip>'
+        replace: '    bindnetaddr: {{ samba_vip_ip }}'

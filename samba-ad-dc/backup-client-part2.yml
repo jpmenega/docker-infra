@@ -5,33 +5,45 @@
       service:
         name: urbackupclientbackend
         state: stopped
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: Disable service urbackupclientbackend
       service:
         name: urbackupclientbackend.service
         enabled: no
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: Download pre UrBackup job script
       get_url:
         url: "{{ git_source }}/samba-ad-dc/scripts/prefilebackup"
         dest: /usr/local/etc/urbackup/
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: change pre UrBackup job script permission
       file:
         path: /usr/local/etc/urbackup/prefilebackup
         state: touch
         mode: "u+rwx,g-rwx,o-rwx"
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: Download post UrBackup job script
       get_url:
         url: "{{ git_source }}/samba-ad-dc/scripts/postfilebackup"
         dest: /usr/local/etc/urbackup/
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: change post UrBackup job script permission
       file:
         path: /usr/local/etc/urbackup/postfilebackup
         state: touch
         mode: "u+rwx,g-rwx,o-rwx"
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
 
     - name: Download crm urbackup script
       shell: "wget {{ git_source }}/samba-ad-dc/scripts/urbackup"
@@ -45,13 +57,13 @@
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
-    - name: Configure pacemaker Samba VIP Bkp
-      shell: "crm configure primitive sambaVIPBkp ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vipbkp_ip }}\" cidr_netmask=\"{{ samba_vipbkp_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vipbkp.txt"
-      args:
-        chdir: $HOME
-        creates: samba-lb-vipbkp.txt
-      when: lb_primary == "yes"
-      with_items: "{{ lb_primary | default([]) }}"
+#    - name: Configure pacemaker Samba VIP Bkp
+#      shell: "crm configure primitive sambaVIPBkp ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vipbkp_ip }}\" cidr_netmask=\"{{ samba_vipbkp_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vipbkp.txt"
+#      args:
+#        chdir: $HOME
+#        creates: samba-lb-vipbkp.txt
+#      when: lb_primary == "yes"
+#      with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba service Bkp
       shell: "crm configure primitive sambaSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-servicebkp.txt"
@@ -62,7 +74,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba Bkp group
-      shell: "crm configure group grp_backup sambaVIPBkp sambaSVCBkp > samba-lb-groupbkp.txt"
+      shell: "crm configure group grp_backup sambaSVCBkp > samba-lb-groupbkp.txt"
       args:
        chdir: $HOME
        creates: samba-lb-groupbkp.txt

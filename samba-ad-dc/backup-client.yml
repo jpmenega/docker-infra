@@ -1,28 +1,34 @@
 - hosts: all
   become: yes
   tasks:
-    - name: Create mnt-samba folder for snapshot
-      file:
-        path: /mnt/samba
+#    - name: Create mnt-samba folder for snapshot
+#      file:
+#        path: /mnt/samba
+#        state: directory
+
+#    - name: Create mnt-shares folder for snapshot
+#      file:
+#        path: /mnt/shares
+#        state: directory
+
+    - name: Create urbackup folder
+      ansible.builtin.file:
+        path: /var/lib/samba/urbackup/
         state: directory
-
-    - name: Create mnt-shares folder for snapshot
-      file:
-        path: /mnt/shares
-        state: directory
-
-    - name: Move usr-local
-      command: mv /usr/local /usr/local-temp
-
-    - name: Create usr-local folder
-      file:
-        path: /usr/local
-        state: directory
-
-    - name: Move usr-local
-      command: mount -t glusterfs -o acl localhost:volume-samba/urbackup /usr/local
-
-    - name: Bring back usr-local content
-      command: mv /usr/local-temp/* /usr/local/
+        mode: '0755'
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Move usr-local
+      command: mv /usr/local/* /var/lib/samba/urbackup/ -R
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Remove local folder
+      command: mv /usr/local /usr/local-tag
+
+    - name: Create a symbolic link
+      ansible.builtin.file:
+        src: /var/lib/samba/urbackup/
+        dest: /usr/local
+        state: link

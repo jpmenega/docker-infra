@@ -53,10 +53,10 @@
         name: samba-ad-dc.service
         state: stopped
 
-#    - name: Disable service windbind
-#      service:
-#        name: winbind.service
-#        enabled: no
+    - name: Disable service windbind
+      service:
+        name: winbind.service
+        enabled: no
 
     - name: Disable service smbd
       service:
@@ -78,47 +78,17 @@
         path: /var/lib/samba
         state: directory
 
-    - name: Configure pacemaker Samba VIP
-      shell: "crm node standby {{ item }} > samba-lb-standby.txt"
-      args:
-        chdir: $HOME
-        creates: samba-lb-standby.txt
-
     - name: Download crm samba script
-      shell: "wget {{ git_source }}/samba-ad-dc/scripts/sambaSVC"
+      shell: "wget {{ git_source }}/samba-ad-dc/scripts/samba"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
-        creates: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
+        creates: /usr/lib/ocf/resource.d/heartbeat/samba
 
     - name: change samba script permission
       file:
-        path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
+        path: /usr/lib/ocf/resource.d/heartbeat/samba
         state: touch
         mode: "u=rwx,g=rx,o=rx"
-
-    - name: "Configure domain name"
-      ansible.builtin.replace:
-        path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DOMAIN=${DOMAIN:-MC.INTRANET}'
-        replace: '        DOMAIN=${DOMAIN:-{{ domain_name_upper }}'
-
-    - name: "Configure domain password"
-      ansible.builtin.replace:
-        path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DOMAINPASS=${DOMAINPASS:-PASSWORD}'
-        replace: '        DOMAINPASS=${DOMAINPASS:-{{ domain_password }}'
-
-    - name: "Configure DNS Forwarder"
-      ansible.builtin.replace:
-        path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DNSFORWARDER=${DNSFORWARDER:-192.168.1.1}'
-        replace: '        DNSFORWARDER=${DNSFORWARDER:-{{ dns_server }}'
-
-    - name: "Configure Samba IP"
-      ansible.builtin.replace:
-        path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        HOSTIP=${HOSTIP:-192.168.1.249}'
-        replace: '        HOSTIP=${HOSTIP:-{{ samba_vip_ip }}'
 
     - name: Configure pacemaker Samba VIP
       shell: "crm configure primitive sambaVIP ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vip_ip }}\" cidr_netmask=\"{{ samba_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
@@ -129,7 +99,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Samba service
-      shell: "crm configure primitive sambaSVC ocf:heartbeat:sambaSVC params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
+      shell: "crm configure primitive sambaSVC ocf:heartbeat:samba params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > samba-lb-service.txt"
       args:
        chdir: $HOME
        creates: samba-lb-service.txt

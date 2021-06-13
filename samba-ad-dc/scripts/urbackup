@@ -105,10 +105,10 @@ urbackup_start()
                 COMMAND="/usr/local/sbin/urbackupclientbackend"
         fi
 
-        if ! (grep -qs '/usr/local ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-samba/urbackup /usr/local
-                if ! (grep -qs '/usr/local ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount glusterfs partition."
+	if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
+                mount -o acl /dev/drbd0 /var/lib/samba
+                if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount samba DRBD partition."
                     exit $OCF_ERR_GENERIC
                 fi
         fi

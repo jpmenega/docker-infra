@@ -90,6 +90,14 @@
       when: gluster == "yes"
       with_items: "{{ gluster | default([]) }}"
 
+    - name: userparameter_drbd.conf
+      shell: "wget {{ git_source }}/main/zabbix-agent/userparameter_drbd.conf"
+      args:
+        chdir: /etc/zabbix/zabbix_agentd.d
+        creates: userparameter_drbd.conf
+      when: gluster != "yes"
+      with_items: "{{ gluster | default([]) }}"
+
     - name: "Install sudo"
       apt:
        name: sudo
@@ -116,3 +124,10 @@
       service:
         name: zabbix-agent.service
         state: restarted
+
+    - name: install rsync
+      apt:
+        name: rsync
+        state: present
+        update_cache: true
+      when: ansible_distribution == 'Debian'

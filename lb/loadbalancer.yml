@@ -61,10 +61,9 @@
       with_items: "{{ lb_slave | default([]) }}"
 
     - name: Download corosync.conf
-      shell: "wget {{ git_source }}/lb/{{ cluster_name }}/corosync.conf; mv corosync.conf /etc/corosync > lb-corosync-conf.txt"
-      args:
-       chdir: $HOME
-       creates: lb-corosync-conf.txt
+      get_url:
+        url: "{{ git_source }}/lb/{{ cluster_name }}/corosync.conf"
+        dest: /etc/corosync
 
     - name: Download pacemaker.conf
       get_url:

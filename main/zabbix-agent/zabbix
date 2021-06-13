@@ -1,5 +1,5 @@
 #zabbix
-Cmnd_Alias CMDS = /etc/zabbix/gluster-monitoring.pl*, /usr/sbin/crm_mon --as-xml, /usr/sbin/service *
+Cmnd_Alias CMDS = /etc/zabbix/gluster-monitoring.pl*, /usr/sbin/crm_mon --as-xml, /usr/sbin/service *, /sbin/drbdadm
 Defaults:zabbix !requiretty
 Defaults:zabbix !syslog
 

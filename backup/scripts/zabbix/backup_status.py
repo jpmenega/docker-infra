@@ -1,9 +1,10 @@
 import urbackup_api
-server = urbackup_api.urbackup_server("http://127.0.0.1:55414/x", "<user>", "<password>")
+server = urbackup_api.urbackup_server("http://127.0.0.1:55414/x", "zabbix", "pED4zKs2GNnmtWGM")
 clients = server.get_status()
 fail = False
 for client in clients:
-    if not client["file_ok"]:
+    if not client["delete_pending"] and not client["file_ok"]:
+        #print(client)
         fail = True
 
 if fail:

@@ -19,7 +19,7 @@ VNC     #ssh root@192.168.1.201 -L 5900:127.0.0.1:5900
 ------------------
 
 Create an attach new disk
-#qemu-img create -f qcow2 /var/lib/libvirt/images/samba-ad-dc02-glusterfs-shares.qcow2 1T
+#qemu-img create {-o preallocation=full} -f qcow2 /var/lib/libvirt/images/samba-ad-dc02-glusterfs-shares.qcow2 1T
 #virsh edit <domain>
 #or
 #virsh attach-disk ubuntu-masternode03 \

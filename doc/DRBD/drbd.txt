@@ -1,0 +1,108 @@
+https://zelbess.tumblr.com/post/3056722387/perfect-backup-scenario-drbd-lvm-snapshots
+https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Clusters_from_Scratch/ch09.html
+https://pt.slideshare.net/fred_m/alta-disponibilidade-utilizando-pacemaker-e-drbd
+https://support.sciencelogic.com/s/article/1176
+
+apt install lvm2
+apt install drbd-utils
+
+cfdisk /dev/vdb
+pvcreate /dev/vdb1
+vgcreate vg_samba /dev/vdb1 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_samba vg_samba
+lvs (para mostrar tamanho alocado e usar na linha abaixo)
+----lvcreate -V 49.89G --thin -n lv_samba vg_samba/tpool_samba
+
+cfdisk /dev/vdc
+pvcreate /dev/vdc1 //pvscan
+vgcreate vg_shares /dev/vdc1 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_shares vg_shares
+lvs (para mostrar tamanho alocado e usar na linha abaixo)
+----lvcreate -V 99.8G --thin -n lv_shares vg_shares/tpool_shares
+
+/etc/drbd.d/global_common.conf
+	startup {
+                wfc-timeout  15;
+                degr-wfc-timeout 60;
+        }
+	net {
+                cram-hmac-alg sha1;
+                shared-secret "secret";
+        }
+
+/etc/drbd.d/samba.res
+resource samba {
+        on samba-ad-dc01 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_samba/tpool_samba;
+                        meta-disk internal;
+                }
+                volume 1 {
+                        device /dev/drbd1;
+                        disk /dev/vg_shares/tpool_shares;
+                        meta-disk internal;
+                }
+                address 192.168.16.241:7788;
+        }
+        on samba-ad-dc02 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_samba/tpool_samba;
+                        meta-disk internal;
+                }
+                volume 1 {
+                        device /dev/drbd1;
+                        disk /dev/vg_shares/tpool_shares;
+                        meta-disk internal;
+                }
+                address 192.168.16.242:7788;
+        }
+}
+
+#ambos nodes
+drbdadm create-md samba
+service drbd start
+(debian)/lib/systemd/systemd-sysv-install enable drbd
+(ubuntu)systemctl enable drbd.service
+
+#node 1
+drbdadm primary samba --force
+
+#node 2
+drbdadm status
+watch -n1 cat /proc/drbd
+
+#node 1
+mkfs.ext4 -v /dev/drbd0
+mkfs.ext4 -v /dev/drbd1
+
+systemctl disable corosync.service
+systemctl disable pacemaker.service
+
+-------
+#split brain
+na vitima:
+drbdadm disconnect meuRes
+drbdadm secondary  meuRes
+drbdadm connect  --discard-my-data   meuRes
+
+no que vai assumir como principal:
+drbdadm disconnect meuRes
+drbdadm connect meuRes
+
+-------
+#zerar um node secundario para forcar um resync full
+drbdadm down r0
+drbdadm wipe-md r0
+drdbadm create-md r0
+drbdadm up r0
+-------
+
+-----
+https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/
+9.3. Using automated LVM snapshots during DRBD synchronization
+MTU 9000
+
+----
+

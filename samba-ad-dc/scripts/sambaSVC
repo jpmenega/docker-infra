@@ -120,8 +120,8 @@ samba_status()
 samba_setup () {
 
         # Set variables
-        DOMAIN=${DOMAIN:-UZ.INTRANET}
-        DOMAINPASS=${DOMAINPASS:-Uz2@21TI}
+        DOMAIN=${DOMAIN:-MC.INTRANET}
+        DOMAINPASS=${DOMAINPASS:-PASSWORD}
         JOIN=${JOIN:-false}
         JOINSITE=${JOINSITE:-NONE}
         MULTISITE=${MULTISITE:-false}
@@ -216,24 +216,39 @@ samba_start()
                 COMMAND="/usr/sbin/samba"
         fi
 
-        HEALTHY_BRICKS=$(gluster volume heal volume-samba info summary| grep -A4 "Brick $HOSTNAME"|grep "Number of entries in split-brain: 0"|wc -l)
-        if [ $HEALTHY_BRICKS != 1 ]; then
-                ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
+        #HEALTHY_BRICKS=$(gluster volume heal volume-samba info summary| grep -A4 "Brick $HOSTNAME"|grep "Number of entries in split-brain: 0"|wc -l)
+        #if [ $HEALTHY_BRICKS != 1 ]; then
+        #        ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
+        #        exit $OCF_ERR_GENERIC
+        #fi
+
+        #if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
+        #        mount -t glusterfs -o acl localhost:volume-samba /var/lib/samba
+        #        if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
+        #            ocf_log err "Error. Can't mount glusterfs partition."
+        #            exit $OCF_ERR_GENERIC
+        #        fi
+        #fi
+
+        #if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
+        #        mount -t glusterfs -o acl localhost:volume-shares /var/lib/samba-shares
+        #        if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
+        #            ocf_log err "Error. Can't mount glusterfs partition."
+        #            exit $OCF_ERR_GENERIC
+        #        fi
+        #fi
+
+	drbdadm primary samba --force
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+                ocf_log err "Error. Can't bring DRBD node as primary."
                 exit $OCF_ERR_GENERIC
         fi
 
         if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-samba /var/lib/samba
+                mount -o acl /dev/drbd0 /var/lib/samba
                 if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount glusterfs partition."
-                    exit $OCF_ERR_GENERIC
-                fi
-        fi
-
-        if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-shares /var/lib/samba-shares
-                if ! (grep -qs '/var/lib/samba-shares ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount glusterfs partition."
+                    ocf_log err "Error. Can't mount samba DRBD partition."
                     exit $OCF_ERR_GENERIC
                 fi
         fi
@@ -253,20 +268,15 @@ samba_start()
 
 samba_stop()
 {
-        if samba_status ; then
-                PID=`cat $PIDFILE`
-                if [ -n "$PID" ] ; then
-                        kill $PID
-                        if [ $? -ne 0 ]; then
-                                kill -SIGKILL $PID
-                                if [ $? -ne 0 ]; then
-                                        ocf_log err "Error. Could not stop samba daemon."
-                                        return $OCF_ERR_GENERIC
-                                fi
-                        fi
-                        rm $PIDFILE 2>/dev/null
-                fi
+	if samba_status ; then
+                killall samba
+                sleep 1
+                killall samba
+                sleep 2
         fi
+        umount -f /var/lib/samba
+        drbdadm secondary samba
+
         ocf_log info "Stopped samba daemon."
         exit $OCF_SUCCESS
 }
