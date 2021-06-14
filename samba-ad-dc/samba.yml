@@ -79,7 +79,7 @@
         state: directory
 
     - name: Configure pacemaker Samba VIP
-      shell: "crm node standby {{ item }} > samba-lb-standby.txt"
+      shell: "crm node standby {{ inventory_hostname }} > samba-lb-standby.txt"
       args:
         chdir: $HOME
         creates: samba-lb-standby.txt
@@ -96,29 +96,29 @@
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
-    - name: "Configure domain name"
-      ansible.builtin.replace:
+    - name: Configure domain name
+      replace:
         path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DOMAIN=${DOMAIN:-MC.INTRANET}'
-        replace: '        DOMAIN=${DOMAIN:-{{ domain_name_upper }}'
+        regexp: 'DOMAIN:-MC.INTRANET'
+        replace: 'DOMAIN:-{{ domain_name_upper }}'
 
-    - name: "Configure domain password"
-      ansible.builtin.replace:
+    - name: Configure domain password
+      replace:
         path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DOMAINPASS=${DOMAINPASS:-PASSWORD}'
-        replace: '        DOMAINPASS=${DOMAINPASS:-{{ domain_password }}'
+        regexp: 'DOMAINPASS:-PASSWORD'
+        replace: 'DOMAINPASS:-{{ domain_password }}'
 
-    - name: "Configure DNS Forwarder"
-      ansible.builtin.replace:
+    - name: Configure DNS Forwarder
+      replace:
         path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        DNSFORWARDER=${DNSFORWARDER:-192.168.1.1}'
-        replace: '        DNSFORWARDER=${DNSFORWARDER:-{{ dns_server }}'
+        regexp: 'DNSFORWARDER:-192.168.1.1'
+        replace: 'DNSFORWARDER:-{{ dns_server }}'
 
-    - name: "Configure Samba IP"
-      ansible.builtin.replace:
+    - name: Configure Samba IP
+      replace:
         path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
-        regexp: '\        HOSTIP=${HOSTIP:-192.168.1.249}'
-        replace: '        HOSTIP=${HOSTIP:-{{ samba_vip_ip }}'
+        regexp: 'HOSTIP:-192.168.1.249'
+        replace: 'HOSTIP:-{{ samba_vip_ip }}'
 
     - name: Configure pacemaker Samba VIP
       shell: "crm configure primitive sambaVIP ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vip_ip }}\" cidr_netmask=\"{{ samba_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
