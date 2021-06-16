@@ -91,12 +91,9 @@
       with_items: "{{ gluster | default([]) }}"
 
     - name: userparameter_drbd.conf
-      shell: "wget {{ git_source }}/main/zabbix-agent/userparameter_drbd.conf"
-      args:
-        chdir: /etc/zabbix/zabbix_agentd.d
-        creates: userparameter_drbd.conf
-      when: gluster != "yes"
-      with_items: "{{ gluster | default([]) }}"
+      get_url:
+        url: "{{ git_source }}/main/zabbix-agent/userparameter_drbd.conf"
+        dest: /etc/zabbix/zabbix_agentd.d
 
     - name: "Install sudo"
       apt:
@@ -105,12 +102,9 @@
        update_cache: true
 
     - name: zabbix sudoer
-      shell: "wget {{ git_source }}/main/zabbix-agent/zabbix"
-      args:
-        chdir: /etc/sudoers.d/
-        creates: zabbix
-      when: gluster == "yes"
-      with_items: "{{ gluster | default([]) }}"
+      get_url:
+        url: "{{ git_source }}/main/zabbix-agent/zabbix"
+        dest: /etc/sudoers.d/
 
     - name: "Install libswitch-perl"
       apt:
