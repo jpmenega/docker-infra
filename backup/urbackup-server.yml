@@ -1,5 +1,5 @@
 #https://www.urbackup.org/administration_manual.html#x1-60002.1.2
-- hosts: all
+- hosts: active
   become: yes
   tasks:
     - name: Add UrBackup repository

@@ -1,5 +1,5 @@
 #https://github.com/uroni/urbackup-server-python-web-api-wrapper
-- hosts: all
+- hosts: active
   become: yes
   tasks:
     - name: "Install python3-pip"

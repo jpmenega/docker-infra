@@ -1,5 +1,5 @@
 #https://bestmonitoringtools.com/how-to-install-zabbix-server-on-ubuntu/
-- hosts: all
+- hosts: active
   become: yes
   tasks:
     - name: Disable service systemd-resolved

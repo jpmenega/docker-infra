@@ -1,5 +1,7 @@
-[masters]
+[active]
 urbackup01 ansible_host=192.168.1.245 ansible_user=root lb_primary=yes
+
+[on_hold]
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

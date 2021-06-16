@@ -1,6 +1,8 @@
-[masters]
+[active]
 zabbix01 ansible_host=192.168.1.243 ansible_user=root lb_primary=yes gluster=yes nodePeer=192.168.1.244
 zabbix02 ansible_host=192.168.1.244 ansible_user=root lb_slave=yes gluster=yes nodePeer=192.168.1.243
+
+[on_hold]
 
 #[workers]
 #ubuntu-workernode01 ansible_host=192.168.1.244 ansible_user=root gluster=yes lb_primary=yes
