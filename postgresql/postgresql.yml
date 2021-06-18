@@ -1,18 +1,27 @@
 - hosts: active
   become: yes
   tasks:
-    - name: Install packages
-      command: apt-get install -y postgresql postgresql-contrib
+    - name: "Install postgresql"
+      apt:
+       name: postgresql
+       state: present
+       update_cache: true
 
-    #- name: Stop samba-ad-dc
-    #  service:
-    #    name: samba-ad-dc.service
-    #    state: stopped
+    - name: "Install postgresql-contrib"
+      apt:
+       name: postgresql-contrib
+       state: present
+       update_cache: true
 
-    #- name: Disable service smbd
-    #  service:
-    #    name: smbd.service
-    #    enabled: no
+    - name: Stop postgresql
+      service:
+        name:postgresql.service
+        state: stopped
+
+    - name: Disable service postgresql
+      service:
+        name: postgresql.service
+        enabled: no
 
     - name: Configure pacemaker PostgreSQL VIP
       shell: "crm node standby {{ inventory_hostname }} > samba-lb-standby.txt"
