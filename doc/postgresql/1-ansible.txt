@@ -1,0 +1,23 @@
+============================
+Source script server pre req
+apt install ansible
+ssh-keygen
+ssh-copy-id root@<node_ip>
+============================
+Source script server
+mkdir ~/docker-cluster
+cd ~/docker-cluster
+
+nano ~/docker-cluster/hosts-postgresql (alterar IPs)
+
+ansible-playbook -i hosts-postgresql ~/docker-cluster/main/initial.yml
+ansible-playbook -i hosts-postgresql ~/docker-cluster/lb/loadbalancer.yml
+
+ansible-playbook -i hosts-postgresql ~/docker-cluster/postgresql/postgresql.yml
+
+ansible-playbook -i hosts-postgresql ~/docker-cluster/postgresql/backup-client.yml
+# comando para instalar o cliente, mas nao usar esse, usar URL local que ja tem a chave do cliente...
+TF=$(mktemp) && wget "https://hndl.urbackup.org/Client/2.4.11/UrBackup%20Client%20Linux%202.4.11.sh" -O $TF && sudo sh $TF; rm -f $TF
+# criar client no UrBackup server e pegar a linha de codigo para executar nos clientes ja com a chave
+ansible-playbook -i hosts-postgresql ~/docker-cluster/postgresql/backup-client-part2.yml
+

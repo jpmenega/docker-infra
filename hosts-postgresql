@@ -1,17 +1,17 @@
 [active]
-firebird01 ansible_host=192.168.1.238 ansible_user=root lb_primary=yes device_id=host01
+postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01
 
 [on_hold]
-firebird02 ansible_host=192.168.1.239 ansible_user=root lb_slave=yes device_id=host02
+postgresql02 ansible_host=192.168.15.17 ansible_user=root lb_slave=yes device_id=host02
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
-domain_name=uz.intranet
+domain_name=medlav.intranet
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb
-zabbix_server_address=192.168.1.0/24
+zabbix_server_address=192.168.15.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
-master_node_delegate=firebird01
-cluster_vip_ip=192.168.1.240
+master_node_delegate=postgresql01
+cluster_vip_ip=192.168.15.18
 cluster_vip_netmask=24
-#cluster_name=firebird
+#cluster_name=postgresql

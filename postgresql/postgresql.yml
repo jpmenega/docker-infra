@@ -1,0 +1,81 @@
+- hosts: active
+  become: yes
+  tasks:
+    - name: Install packages
+      command: apt-get install -y postgresql postgresql-contrib
+
+    #- name: Stop samba-ad-dc
+    #  service:
+    #    name: samba-ad-dc.service
+    #    state: stopped
+
+    #- name: Disable service smbd
+    #  service:
+    #    name: smbd.service
+    #    enabled: no
+
+    - name: Configure pacemaker PostgreSQL VIP
+      shell: "crm node standby {{ inventory_hostname }} > samba-lb-standby.txt"
+      args:
+        chdir: $HOME
+        creates: samba-lb-standby.txt
+
+    - name: Download crm PostgreSQL script
+      shell: "wget {{ git_source }}/postgresql/scripts/postgreSVC"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
+
+    - name: change PostgreSQL script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Configure pacemaker PostgreSQL VIP
+      shell: "crm configure primitive postgreVIP ocf:heartbeat:IPaddr2 params ip=\"{{ cluster_vip_ip }}\" cidr_netmask=\"{{ cluster_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > cluster-lb-vip.txt"
+      args:
+        chdir: $HOME
+        creates: cluster-lb-vip.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    #- name: Configure pacemaker PostgreSQL service
+    #  shell: "crm configure primitive postgreSVC ocf:heartbeat:postgreSVC params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > cluster-lb-service.txt"
+    #  args:
+    #   chdir: $HOME
+    #   creates: cluster-lb-service.txt
+    #  when: lb_primary == "yes"
+    #  with_items: "{{ lb_primary | default([]) }}"
+
+    #- name: Configure pacemaker PostgreSQL group
+    #  shell: "crm configure group grp_balancing postgreVIP postgreSVC > cluster-lb-group.txt"
+    #  args:
+    #   chdir: $HOME
+    #   creates: cluster-lb-group.txt
+    #  when: lb_primary == "yes"
+    #  with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure stickiness to avoid unnecessary move on recover
+      shell: "crm configure rsc_defaults resource-stickiness=100 > samba-lb-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: samba-lb-stickiness.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    #- name: Configure PostgreSQL less prefer postgresql02
+    #  shell: "crm configure location noprefer-postgresql-node postgreSVC 5: postgresql02 > postgresql-lb-noprefer.txt"
+    #  args:
+    #   chdir: $HOME
+    #   creates: postgresql-lb-noprefer.txt
+    #  when: lb_primary == "yes"
+    #  with_items: "{{ (lb_primary | default([])) }}"
+
+    #- name: Configure PostgreSQL prefer postgresql01
+    #  shell: "crm configure location prefer-postgresql-node postgreSVC 50: postgresql01 > postgresql-lb-prefer.txt"
+    #  args:
+    #   chdir: $HOME
+    #   creates: postgresql-lb-prefer.txt
+    #  when: lb_primary == "yes"
+    #  with_items: "{{ (lb_primary | default([])) }}"

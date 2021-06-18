@@ -65,7 +65,7 @@
         url: "{{ git_source }}/lb/configs/corosync.conf"
         dest: /etc/corosync
 
-    - name: Configure node IP
+    - name: Configure node IP'
       replace:
         path: /etc/corosync/corosync.conf
         regexp: '<{{ hostvars[item].device_id }}>'
@@ -77,7 +77,7 @@
       replace:
         path: /etc/corosync/corosync.conf
         regexp: '\    bindnetaddr: <bind_ip>'
-        replace: '    bindnetaddr: {{ firebird_vip_ip }}'
+        replace: '    bindnetaddr: {{ cluster_vip_ip }}'
 
     - name: Download pacemaker.conf
       get_url:

@@ -121,7 +121,7 @@
         replace: 'HOSTIP:-{{ samba_vip_ip }}'
 
     - name: Configure pacemaker Samba VIP
-      shell: "crm configure primitive sambaVIP ocf:heartbeat:IPaddr2 params ip=\"{{ samba_vip_ip }}\" cidr_netmask=\"{{ samba_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
+      shell: "crm configure primitive sambaVIP ocf:heartbeat:IPaddr2 params ip=\"{{ cluster_vip_ip }}\" cidr_netmask=\"{{ cluster_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > samba-lb-vip.txt"
       args:
         chdir: $HOME
         creates: samba-lb-vip.txt
