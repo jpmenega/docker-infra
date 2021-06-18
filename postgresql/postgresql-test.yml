@@ -1,0 +1,25 @@
+- hosts: active
+  become: yes
+  tasks:
+    - name: Turn primary node as DRBD primary
+      shell: "drbdadm primary drbd > drbd-primary.txt"
+      args:
+        chdir: $HOME
+        creates: drbd-primary.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create PostgreSQL data folder
+      file:
+        path: /mnt/postgresql
+        state: directory
+
+    - name: Mount DRBD on primary node only
+      mount:
+        path: /mnt/postgresql
+        src: /dev/drbd0
+        opts: acl
+        fstype: ext4
+        state: mounted
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"

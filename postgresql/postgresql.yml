@@ -1,6 +1,74 @@
 - hosts: active
   become: yes
   tasks:
+    - name: Turn primary node as DRBD primary
+      shell: "drbdadm primary drbd > drbd-primary.txt"
+      args:
+        chdir: $HOME
+        creates: drbd-primary.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create PostgreSQL data folder
+      file:
+        path: /mnt/postgresql
+        state: directory
+
+    - name: Mount DRBD on primary node only
+      mount:
+        path: /mnt/postgresql
+        src: /dev/drbd0
+        opts: acl
+        fstype: ext4
+        state: mounted
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create etc folder on primary node only
+      file:
+        path: /mnt/postgresql/etc_postgresql
+        state: directory
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create etc common folder on primary node only
+      file:
+        path: /mnt/postgresql/etc_postgresql-common
+        state: directory
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create var folder on primary node only
+      file:
+        path: /mnt/postgresql/var_lib_postgresql
+        state: directory
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for etc on primary node
+      file:
+        src: /mnt/postgresql/etc_postgresql
+        dest: /etc/postgresql
+        state: link
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for etc common on primary node
+      file:
+        src: /mnt/postgresql/etc_postgresql-common
+        dest: /etc/postgresql-common
+        state: link
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for var on primary node
+      file:
+        src: /mnt/postgresql/var_lib_postgresql
+        dest: /var/lib/postgresql
+        state: link
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
     - name: "Install postgresql"
       apt:
        name: postgresql
@@ -15,7 +83,7 @@
 
     - name: Stop postgresql
       service:
-        name:postgresql.service
+        name: postgresql.service
         state: stopped
 
     - name: Disable service postgresql
@@ -23,17 +91,77 @@
         name: postgresql.service
         enabled: no
 
-    - name: Configure pacemaker PostgreSQL VIP
-      shell: "crm node standby {{ inventory_hostname }} > samba-lb-standby.txt"
+    - name: Unmount DRBD
+      mount:
+        path: /mnt/postgresql
+        state: unmounted
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Turn primary node back as DRBD secondary
+      shell: "drbdadm secondary drbd > drbd-secondary.txt"
       args:
         chdir: $HOME
-        creates: samba-lb-standby.txt
+        creates: drbd-secondary.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Delete var PostgreSQL folder from secondary nodes
+      file:
+        state: absent
+        path: /var/lib/postgresql
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Delete etc PostgreSQL folder from secondary nodes
+      file:
+        state: absent
+        path: /etc/postgresql
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Delete etc common PostgreSQL folder from secondary nodes
+      file:
+        state: absent
+        path: /etc/postgresql-common
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for etc for secondary nodes
+      file:
+        src: /mnt/postgresql/etc_postgresql
+        dest: /etc/postgresql
+        state: link
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for etc common for secondary nodes
+      file:
+        src: /mnt/postgresql/etc_postgresql-common
+        dest: /etc/postgresql-common
+        state: link
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a symbolic link for var for secondary nodes
+      file:
+        src: /mnt/postgresql/var_lib_postgresql
+        dest: /var/lib/postgresql
+        state: link
+      when: lb_primary == "no"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure pacemaker PostgreSQL VIP
+      shell: "crm node standby {{ inventory_hostname }} > postgresql-lb-standby.txt"
+      args:
+        chdir: $HOME
+        creates: postgresql-lb-standby.txt
 
     - name: Download crm PostgreSQL script
       shell: "wget {{ git_source }}/postgresql/scripts/postgreSVC"
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
-        creates: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
+        creates: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
 
     - name: change PostgreSQL script permission
       file:
@@ -49,27 +177,27 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
-    #- name: Configure pacemaker PostgreSQL service
-    #  shell: "crm configure primitive postgreSVC ocf:heartbeat:postgreSVC params conffile=/etc/samba/smb.conf op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > cluster-lb-service.txt"
-    #  args:
-    #   chdir: $HOME
-    #   creates: cluster-lb-service.txt
-    #  when: lb_primary == "yes"
-    #  with_items: "{{ lb_primary | default([]) }}"
-
-    #- name: Configure pacemaker PostgreSQL group
-    #  shell: "crm configure group grp_balancing postgreVIP postgreSVC > cluster-lb-group.txt"
-    #  args:
-    #   chdir: $HOME
-    #   creates: cluster-lb-group.txt
-    #  when: lb_primary == "yes"
-    #  with_items: "{{ (lb_primary | default([])) }}"
-
-    - name: Configure stickiness to avoid unnecessary move on recover
-      shell: "crm configure rsc_defaults resource-stickiness=100 > samba-lb-stickiness.txt"
+    - name: Configure pacemaker PostgreSQL service
+      shell: "crm configure primitive postgreSVC ocf:heartbeat:postgreSVC params conffile=/etc/postgresql/11/main/postgresql.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > cluster-lb-service.txt"
       args:
        chdir: $HOME
-       creates: samba-lb-stickiness.txt
+       creates: cluster-lb-service.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker PostgreSQL group
+      shell: "crm configure group grp_balancing postgreVIP postgreSVC > cluster-lb-group.txt"
+      args:
+       chdir: $HOME
+       creates: cluster-lb-group.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure stickiness to avoid unnecessary move on recover
+      shell: "crm configure rsc_defaults resource-stickiness=100 > postgresql-lb-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: postgresql-lb-stickiness.txt
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 

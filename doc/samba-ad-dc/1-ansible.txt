@@ -35,6 +35,7 @@ samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
 samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/volumes/
 
 # reload samba config
+killall -HUP smbd nmbd
 smbcontrol smbd reload-config
 smbstatus #acaba validando o smb.conf
 
