@@ -2,10 +2,7 @@
   become: yes
   tasks:
     - name: Turn primary node as DRBD primary
-      shell: "drbdadm primary drbd > drbd-primary.txt"
-      args:
-        chdir: $HOME
-        creates: drbd-primary.txt
+      shell: "drbdadm primary drbd"
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
@@ -99,10 +96,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Turn primary node back as DRBD secondary
-      shell: "drbdadm secondary drbd > drbd-secondary.txt"
-      args:
-        chdir: $HOME
-        creates: drbd-secondary.txt
+      shell: "drbdadm secondary drbd"
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 

@@ -152,9 +152,10 @@ postgresql_start()
 
         $COMMAND
 
+	sleep 1
         postgresql_status
         retVal=$?
-        if [ $retVal -ne $OCF_NOT_RUNNING ]; then
+        if [ $retVal -eq $OCF_NOT_RUNNING ]; then
                 ocf_log err "Error. Unknown status."
                 exit $OCF_ERR_GENERIC
         fi

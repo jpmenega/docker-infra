@@ -1,7 +1,7 @@
-[active]
+[on_hold]
 postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01
 
-[on_hold]
+[active]
 postgresql02 ansible_host=192.168.15.17 ansible_user=root lb_slave=yes device_id=host02
 
 [all:vars]
