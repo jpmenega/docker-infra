@@ -6,6 +6,7 @@
       service:
         name: systemd-resolved.service
         enabled: no
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Stop systemd-resolved
       service:

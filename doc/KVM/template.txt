@@ -1,0 +1,17 @@
+Template
+https://www.tecmint.com/create-kvm-virtual-machine-template/
+
+#virt-install --virt-type=kvm --name template-debian10 --ram 1024 --vcpus=2 --os-variant=debian10 --cdrom=/var/lib/libvirt/boot/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/template-debian10.qcow2,size=20,bus=virtio,format=qcow2
+
+//instalar pacotes na VM
+//poweroff
+
+#virt-sysprep -d template-debian10
+#virsh undefine template-debian10
+
+//clonar
+cp --sparse=always template-debian10.qcow2 <new-vm>.qcow2
+chown libvirt-qemu.libvirt-qemu <new-vm>.qcow2
+
+//importar
+virt-install --import --virt-type=kvm --name <new-vm> --ram 1024 --vcpus=2 --os-variant=debian10 --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/<new-vm>.qcow2,bus=virtio,format=qcow2

@@ -12,7 +12,7 @@ sudo reboot
 egrep -c '(vmx|svm)' /proc/cpuinfo    ==> great than zero
 grep -E --color '(vmx|svm)' /proc/cpuinfo   ==> vmx=intel  svm=amd
 
-sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon virt-manager libosinfo-bin -y
+sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon virt-manager libosinfo-bin libguestfs-tools -y
 
 sudo systemctl status libvirtd.service
 
