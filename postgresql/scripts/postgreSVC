@@ -132,7 +132,7 @@ postgresql_start()
         #if [ -n "$OCF_RESKEY_binpath" ]; then
         #        COMMAND="$OCF_RESKEY_binpath"
         #else
-                COMMAND="service postgresql start"
+                #COMMAND="su postgres -c \"/usr/lib/postgresql/11/bin/pg_ctl start -D /etc/postgresql/11/main/\""
         #fi
 
 	drbdadm primary drbd --force
@@ -150,7 +150,8 @@ postgresql_start()
                 fi
         fi
 
-        $COMMAND
+	su postgres -c "/usr/lib/postgresql/11/bin/pg_ctl start -D /etc/postgresql/11/main/"
+        #$COMMAND
 
 	sleep 1
         postgresql_status
@@ -168,7 +169,7 @@ postgresql_start()
 postgresql_stop()
 {
 	if postgresql_status ; then
-		service postgresql stop
+		su postgres -c "/usr/lib/postgresql/11/bin/pg_ctl stop -D /etc/postgresql/11/main/"
 		sleep 1
 		if postgresql_status ; then
 			killall postgres

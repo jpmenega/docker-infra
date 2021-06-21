@@ -50,6 +50,8 @@ reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
 apt install lvm2 drbd-utils
+(debian)/lib/systemd/systemd-sysv-install enable drbd
+(ubuntu)systemctl enable drbd.service
 
 cfdisk /dev/vdb
 pvcreate /dev/vdb1
@@ -90,8 +92,6 @@ resource drbd {
 #ambos nodes
 drbdadm create-md drbd
 service drbd start
-(debian)/lib/systemd/systemd-sysv-install enable drbd
-(ubuntu)systemctl enable drbd.service
 
 #node 1
 drbdadm primary drbd --force

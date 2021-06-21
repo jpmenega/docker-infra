@@ -33,16 +33,109 @@ network:
         - uz.com.br
   version: 2
 -----
+#vim.tiny /etc/network/interfaces
+auto eth0
+iface eth0 inet static
+  address 192.168.15.19
+  netmask 255.255.255.0
+  gateway 192.168.15.1
+  dns-nameservers 192.168.15.1
+  mtu 9000
+
+#vim.tiny /etc/resolv.conf
+search medlav.intranet
+nameserver 192.168.15.1
+-----
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
-*Worker nodes for GlusterFS (executar para sdb -infra- e sdc -samba-)
-cfdisk /dev/sdb (or vdb)
-mkfs -t ext4 /dev/sdb1 (or vdb1)
-mkdir -p /gfs/zabbix
+--------------
+apt install lvm2 drbd-utils
 
-vi /etc/fstab
-/dev/sdb1       /gfs/zabbix   ext4    defaults,nofail
+cfdisk /dev/vdb
+pvcreate /dev/vdb1
+vgcreate vg_drbd /dev/vdb1 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_drbd vg_drbd
+lvs (para mostrar tamanho alocado e usar na linha abaixo)
+
+/etc/drbd.d/global_common.conf
+        startup {
+                wfc-timeout  15;
+                degr-wfc-timeout 60;
+        }
+        net {
+                cram-hmac-alg sha1;
+                shared-secret "secret";
+        }
+
+/etc/drbd.d/drbd.res
+resource drbd {
+        on firebird01 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_drbd/tpool_drbd;
+                        meta-disk internal;
+                }
+                address 192.168.15.19:7788;
+        }
+        on firebird02 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_drbd/tpool_drbd;
+                        meta-disk internal;
+                }
+                address 192.168.15.20:7788;
+        }
+}
+
+#ambos nodes
+drbdadm create-md drbd
+service drbd start
+(debian)/lib/systemd/systemd-sysv-install enable drbd
+(ubuntu)systemctl enable drbd.service
+
+#node 1
+drbdadm primary drbd --force
+
+#node 2
+drbdadm status
+watch -n1 cat /proc/drbd
+
+#node 1
+mkfs.ext4 -v /dev/drbd0
+drbdadm secondary drbd
+
+systemctl disable corosync.service
+systemctl disable pacemaker.service
+
+-------
+#split brain
+na vitima:
+drbdadm disconnect drbd
+drbdadm secondary  drbd
+drbdadm connect  --discard-my-data   drbd
+
+no que vai assumir como principal:
+drbdadm disconnect drbd
+drbdadm connect drbd
+
+-------
+#zerar um node secundario para forcar um resync full
+drbdadm down drbd
+drbdadm wipe-md drbd
+drdbadm create-md drbd
+drbdadm up drbd
+-------
+
+-----
+https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/
+9.3. Using automated LVM snapshots during DRBD synchronization
+MTU 9000
+------
+
+
+
+--------------
 
 *Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
 ssh-keygen

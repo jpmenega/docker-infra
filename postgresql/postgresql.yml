@@ -88,6 +88,30 @@
         name: postgresql.service
         enabled: no
 
+    - name: "Configure postgresql.conf"
+      replace:
+        path: /etc/postgresql/11/main/postgresql.conf
+        regexp: "#listen_addresses = 'localhost'"
+        replace: "listen_addresses = '*'"
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: "Configure pg_hba.conf"
+      lineinfile:
+        dest: "/etc/postgresql/11/main/pg_hba.conf"
+        insertafter: 'host    all             all             127.0.0.1/32            md5'
+        line: "host    all             all             0.0.0.0/0            md5"
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create a default postgres password
+      shell: "sudo -u postgres psql -c "alter user postgres password 'postgres';\" > postgresql-default-password.txt"
+      args:
+        chdir: $HOME
+        creates: postgresql-default-password.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
     - name: Unmount DRBD
       mount:
         path: /mnt/postgresql
@@ -104,46 +128,46 @@
       file:
         state: absent
         path: /var/lib/postgresql
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Delete etc PostgreSQL folder from secondary nodes
       file:
         state: absent
         path: /etc/postgresql
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Delete etc common PostgreSQL folder from secondary nodes
       file:
         state: absent
         path: /etc/postgresql-common
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Create a symbolic link for etc for secondary nodes
       file:
         src: /mnt/postgresql/etc_postgresql
         dest: /etc/postgresql
         state: link
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Create a symbolic link for etc common for secondary nodes
       file:
         src: /mnt/postgresql/etc_postgresql-common
         dest: /etc/postgresql-common
         state: link
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Create a symbolic link for var for secondary nodes
       file:
         src: /mnt/postgresql/var_lib_postgresql
         dest: /var/lib/postgresql
         state: link
-      when: lb_primary == "no"
-      with_items: "{{ (lb_primary | default([])) }}"
+      when: lb_slave == "yes"
+      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Configure pacemaker PostgreSQL VIP
       shell: "crm node standby {{ inventory_hostname }} > postgresql-lb-standby.txt"

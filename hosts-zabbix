@@ -1,24 +1,19 @@
 [active]
-zabbix01 ansible_host=192.168.1.243 ansible_user=root lb_primary=yes gluster=yes nodePeer=192.168.1.244
-zabbix02 ansible_host=192.168.1.244 ansible_user=root lb_slave=yes gluster=yes nodePeer=192.168.1.243
+zabbix01 ansible_host=192.168.15.19 ansible_user=root lb_primary=yes nodePeer=192.168.15.20 device_id=host01
 
 [on_hold]
-
-#[workers]
-#ubuntu-workernode01 ansible_host=192.168.1.244 ansible_user=root gluster=yes lb_primary=yes
-#ubuntu-workernode02 ansible_host=192.168.1.245 ansible_user=root gluster=yes lb_slave=yes
+zabbix02 ansible_host=192.168.15.20 ansible_user=root lb_slave=yes nodePeer=192.168.15.19 device_id=host02
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
-domain_name=uz.com.br
+domain_name=medlav.com.br
 name_server=192.168.1.1
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bubuntu20.04_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1+ubuntu20.04_all.deb
-zabbix_server_address=192.168.1.0/24
+zabbix_server_address=192.168.15.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=zabbix01
-gluster_replica=replica 2 zabbix01:/gfs/zabbix zabbix02:/gfs/zabbix
-zabbix_vip_ip=192.168.1.250
+cluster_vip_ip=192.168.15.21
 zabbix_vip_netmask=24
 mysql_vip_ip=192.168.1.248
 mysql_vip_netmask=24
