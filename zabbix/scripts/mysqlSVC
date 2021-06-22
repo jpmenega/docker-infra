@@ -152,25 +152,26 @@ mysql_start()
                 COMMAND="service mysql start"
         fi
 
-        if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
-                mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql
-                if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount glusterfs partition."
-                    exit $OCF_ERR_GENERIC
-                fi
-        fi
-
-        HEALTHY_BRICKS=$(gluster volume heal volume-zabbix info summary | grep -A4 "Brick $HOSTNAME"|grep "Number of entries in split-brain: 0"|wc -l)
-        if [ $HEALTHY_BRICKS != 1 ]; then
-                ocf_log err "Error. GlusterFS is unhealthy, try manual heal to fix."
-                exit $OCF_ERR_GENERIC
-        fi
-
 	is_isolation
 	if [ $? -eq 1 ]; then
             ocf_log err "Error. Node is alone, process halted to avoid active-active."
             exit $OCF_ERR_GENERIC
 	fi
+
+	drbdadm primary drbd --force
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+                ocf_log err "Error. Can't bring DRBD node as primary."
+                exit $OCF_ERR_GENERIC
+        fi
+
+	if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                mount -o acl /dev/drbd0 /var/lib/mysql
+                if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount MySQL DRBD partition."
+                    exit $OCF_ERR_GENERIC
+                fi
+        fi
 
         $COMMAND
         if [ $? -ne 0 ]; then
@@ -198,6 +199,9 @@ mysql_stop()
                                 fi
                         fi
                         rm $PIDFILE 2>/dev/null
+
+			umount -f /var/lib/mysql
+		        drbdadm secondary drbd
                 fi
         fi
         ocf_log info "Stopped mysql daemon."

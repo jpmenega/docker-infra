@@ -117,6 +117,23 @@ postgresql_status()
         return $OCF_NOT_RUNNING
 }
 
+is_isolation()
+{
+        cnt=3
+        testIP=<check_isolation_ip>
+        #testIP=1.2.3.4
+        nodePeer=<nodePeer>
+        #nodePeer=1.2.3.4
+        recv=$(/bin/ping -c 1 -w 3 -q $nodePeer | grep received | cut -d, -f2 | awk '{print $1}')
+        if [ "$recv" -eq 0 ]; then
+            recv=$(/bin/ping -c $cnt -q $testIP | grep received | cut -d, -f2 | awk '{print $1}')
+            if [ "$recv" -eq 0 ]; then
+                return 1
+            fi
+        fi
+        return 0
+}
+
 postgresql_start()
 {
         # if postgresql_ is running return success
@@ -129,11 +146,11 @@ postgresql_start()
                 exit $OCF_ERR_GENERIC
         fi
 
-        #if [ -n "$OCF_RESKEY_binpath" ]; then
-        #        COMMAND="$OCF_RESKEY_binpath"
-        #else
-                #COMMAND="su postgres -c \"/usr/lib/postgresql/11/bin/pg_ctl start -D /etc/postgresql/11/main/\""
-        #fi
+	is_isolation
+        if [ $? -eq 1 ]; then
+            ocf_log err "Error. Node is alone, process halted to avoid active-active."
+            exit $OCF_ERR_GENERIC
+        fi
 
 	drbdadm primary drbd --force
         retVal=$?

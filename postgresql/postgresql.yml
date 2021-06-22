@@ -169,7 +169,7 @@
       when: lb_slave == "yes"
       with_items: "{{ (lb_slave | default([])) }}"
 
-    - name: Configure pacemaker PostgreSQL VIP
+    - name: Put nodes at stand by mode
       shell: "crm node standby {{ inventory_hostname }} > postgresql-lb-standby.txt"
       args:
         chdir: $HOME
@@ -180,6 +180,18 @@
       args:
         chdir: /usr/lib/ocf/resource.d/heartbeat
         creates: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
+
+    - name: "Configure postgreSVC script - check_isolation_ip"
+      replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
+        regexp: '<check_isolation_ip>'
+        replace: '{{ check_isolation_ip }}'
+
+    - name: "Configure postgreSVC script - nodePeer"
+      replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
+        regexp: '<nodePeer>'
+        replace: '{{ nodePeer }}'
 
     - name: change PostgreSQL script permission
       file:

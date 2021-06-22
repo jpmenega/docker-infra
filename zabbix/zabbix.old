@@ -15,7 +15,7 @@
       when: ansible_distribution == 'Ubuntu'
 
     - name: Remove resolv.conf managed
-      file:
+      ansible.builtin.file:
         path: /etc/resolv.conf
         state: absent
 
@@ -26,34 +26,28 @@
           nameserver {{ name_server }}
           search {{ domain_name }}
 
-    - name: "apt update"
-      apt:
-       update_cache: true
-
     - name: "Install Zabbix Server"
       apt:
        name: zabbix-server-mysql
        state: present
+       update_cache: true
 
     - name: "Install Zabbix Frontend"
       apt:
        name: zabbix-frontend-php
        state: present
+       update_cache: true
 
     - name: "Install Apache"
       apt:
        name: zabbix-apache-conf
        state: present
+       update_cache: true
 
     - name: Disable service apache2
       service:
         name: apache2.service
         enabled: no
-
-    - name: Stop apache2
-      service:
-        name: apache2.service
-        state: stopped
 
     - name: Create Zabbix Home
       file:
@@ -69,7 +63,7 @@
           password='{{ mysql_zabbix_password }}'
 
     - name: Recursively change ownership of Zabbix home folder
-      file:
+      ansible.builtin.file:
         path: /var/lib/zabbix
         state: directory
         recurse: yes
@@ -87,41 +81,57 @@
         name: zabbix-agent.service
         state: restarted
 
+    - name: Create Gluster Zabbix MySQL volume
+      shell: "gluster volume create volume-zabbix {{ gluster_replica }} force > zabbix-gluster-volume.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-gluster-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
+    - name: Start Gluster Zabbix MySQL volume
+      shell: "gluster volume start volume-zabbix > zabbix-gluster-start-volume.txt"
+      args:
+        chdir: $HOME
+        creates: zabbix-gluster-start-volume.txt
+      when: gluster == "yes" and lb_primary == "yes"
+      with_items: "{{ (gluster | default([])) and (lb_primary | default([])) }}"
+
     - name: Create Zabbix MySQL data folder
       file:
         path: /var/lib/mysql
         state: directory
 
-    - name: Turn primary node as DRBD primary
-      shell: "drbdadm primary drbd"
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
+    - name: Check if Gluster Volume is mounted
+      command: mountpoint -q /var/lib/mysql
+      register: volume_stat
+      failed_when: False
+      changed_when: False
 
-    - name: Mount DRBD on primary node only
-      mount:
-        path: /var/lib/mysql
-        src: /dev/drbd0
-        opts: acl
-        fstype: ext4
-        state: mounted
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
+    - name: Mount gluster volume
+      shell: "mount -t glusterfs -o acl localhost:volume-zabbix /var/lib/mysql"
+      args:
+        creates: /var/lib/mysql/mysql
+      when: volume_stat.rc != 0
 
     - name: "Install mariadb-common"
       apt:
         name: mariadb-common
         state: present
+        update_cache: true
 
     - name: "Install mariadb-client"
       apt:
         name: mariadb-client-10.3
         state: present
+        update_cache: true
 
     - name: "Install mariadb-server"
       apt:
         name: mariadb-server-10.3
         state: present
-      #throttle: 1
+        update_cache: true
+      throttle: 1
 
     - name: Disable service mysqld
       service:
@@ -133,7 +143,17 @@
         name: mysql.service
         state: stopped
 
-    - name: Download storage tunning
+    - name: Disable service apache2
+      service:
+        name: apache2.service
+        enabled: no
+
+    - name: Stop apache2
+      service:
+        name: apache2.service
+        state: stopped
+
+    - name: Download MySQL GlusterFS tunning
       shell: "wget {{ git_source }}/zabbix/config/default_auth.cnf"
       args:
         chdir: /etc/mysql/conf.d/
@@ -237,13 +257,13 @@
         creates: /etc/zabbix/web/zabbix.conf.php
 
     - name: "Configure Frontend database connection config"
-      replace:
+      ansible.builtin.replace:
         path: /etc/zabbix/web/zabbix.conf.php
         regexp: '<mysql_vip_ip>'
         replace: '{{ mysql_vip_ip }}'
 
     - name: "Configure Frontend database connection config"
-      replace:
+      ansible.builtin.replace:
         path: /etc/zabbix/web/zabbix.conf.php
         regexp: '<mysql_zabbix_password>'
         replace: '{{ mysql_zabbix_password }}'
@@ -254,20 +274,6 @@
         state: stopped
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
-
-    - name: Delete var mysql folder from secondary nodes
-      file:
-        state: absent
-        path: /var/lib/mysql
-      when: lb_slave == "yes"
-      with_items: "{{ (lb_slave | default([])) }}"
-
-    - name: Create Zabbix Home
-      file:
-        path: /var/lib/zabbix
-        state: directory
-      when: lb_slave == "yes"
-      with_items: "{{ (lb_slave | default([])) }}"
 
     - name: Download crm mysql script
       shell: "wget {{ git_source }}/zabbix/scripts/mysqlSVC"
@@ -282,13 +288,13 @@
         mode: "u=rwx,g=rx,o=rx"
 
     - name: "Configure mysqlSVC script - check_isolation_ip"
-      replace:
+      ansible.builtin.replace:
         path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
         regexp: '<check_isolation_ip>'
         replace: '{{ check_isolation_ip }}'
 
     - name: "Configure mysqlSVC script - nodePeer"
-      replace:
+      ansible.builtin.replace:
         path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
         regexp: '<nodePeer>'
         replace: '{{ nodePeer }}'
@@ -316,12 +322,6 @@
         path: /usr/lib/ocf/resource.d/heartbeat/zabbixSVC
         state: touch
         mode: "u=rwx,g=rx,o=rx"
-
-    - name: Put nodes at stand by mode
-      shell: "crm node standby {{ inventory_hostname }} > postgresql-lb-standby.txt"
-      args:
-        chdir: $HOME
-        creates: postgresql-lb-standby.txt
 
     - name: Configure pacemaker MySQL VIP
       shell: "crm configure primitive mysqlVIP ocf:heartbeat:IPaddr2 params ip=\"{{ mysql_vip_ip }}\" cidr_netmask=\"{{ zabbix_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > lb-mysql-vip.txt"
@@ -423,6 +423,7 @@
       apt:
        name: cifs-utils
        state: present
+       update_cache: true
 
     - name: Download backup script
       shell: "wget {{ git_source }}/zabbix/scripts/backup.sh"
@@ -437,20 +438,20 @@
         mode: "u=rwx,g=x,o=x"
 
     - name: Change ownership of backup script
-      file:
+      ansible.builtin.file:
         path: /var/lib/zabbix/backup.sh
         owner: zabbix
         group: zabbix
 
     - name: "Configure backup script - mysql_vip_ip"
-      replace:
+      ansible.builtin.replace:
         path: /var/lib/zabbix/backup.sh
         regexp: '<mysql_vip_ip>'
         replace: '{{ mysql_vip_ip }}'
 
     - name: Create crontab backup job
-      cron:
-        name: "Backup"
+      ansible.builtin.cron:
+        name: "check dirs"
         minute: "0"
         hour: "23"
         job: "/var/lib/zabbix/backup.sh"

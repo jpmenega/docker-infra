@@ -1,8 +1,8 @@
 [on_hold]
-postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01
+postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01 nodePeer=192.168.15.17
 
 [active]
-postgresql02 ansible_host=192.168.15.17 ansible_user=root lb_slave=yes device_id=host02
+postgresql02 ansible_host=192.168.15.17 ansible_user=root lb_slave=yes device_id=host02 nodePeer=192.168.15.16
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -15,3 +15,4 @@ master_node_delegate=postgresql01
 cluster_vip_ip=192.168.15.18
 cluster_vip_netmask=24
 #cluster_name=postgresql
+check_isolation_ip=208.67.220.222
