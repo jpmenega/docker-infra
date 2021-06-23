@@ -1,7 +1,7 @@
-[active]
+[on_hold]
 zabbix01 ansible_host=192.168.15.19 ansible_user=root lb_primary=yes nodePeer=192.168.15.20 device_id=host01
 
-[on_hold]
+[active]
 zabbix02 ansible_host=192.168.15.20 ansible_user=root lb_slave=yes nodePeer=192.168.15.19 device_id=host02
 
 [all:vars]
@@ -16,8 +16,8 @@ zabbix_server_address=192.168.15.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=zabbix01
 cluster_vip_ip=192.168.15.21
-zabbix_vip_netmask=24
-mysql_vip_ip=192.168.1.248
+cluster_vip_netmask=24
+mysql_vip_ip=192.168.15.22
 mysql_vip_netmask=24
 mysql_zabbix_password=zabbix_pwd
 cluster_name=zabbix

@@ -1,0 +1,26 @@
+- hosts: database_server
+  become: yes
+  tasks:
+    - name: Drop Zabbix database
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"drop database zabbix;\""
+
+    - name: Create Zabbix database
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"create database zabbix character set utf8 collate utf8_bin;\""
+
+    - name: Grant zabbix user privileges - localhost
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on *.* to zabbix@localhost identified by '{{ mysql_zabbix_password }}';\""
+
+    - name: Grant zabbix user privileges
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"grant all privileges on zabbix.* to zabbix@{{ item }}.{{ domain_name }} identified by '{{ mysql_zabbix_password }}';\""
+      delegate_to: "{{ master_node_delegate }}"
+      with_items: "{{ groups['all'] }}"
+
+    - name: MySQL disable strict mode
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"set global innodb_strict_mode='OFF';\""
+
+    - name: Restore bakup from {{ backup_2_restore }}
+      shell: "zcat {{ backup_2_restore }} | mysql -uzabbix -p'{{ mysql_zabbix_password }}' zabbix"
+
+    - name: MySQL enable strict mode
+      shell: "mysql -uroot -p'{{ mysql_zabbix_password }}' -e \"set global innodb_strict_mode='ON';\""
+
