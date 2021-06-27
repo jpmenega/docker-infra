@@ -49,37 +49,88 @@ nameserver 192.168.16.1
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
-(Debian) apt-get install lvm2
-*Worker nodes for GlusterFS
-cfdisk /dev/sdb (or vdb)
- old- mkfs -t ext4 /dev/sdb1 (or vdb1)
-pvcreate /dev/sdb1 (or vdb1) //pvscan
-vgcreate vg_gluster /dev/sdb1 (or vdb1) //vgdisplay (****ver sobre tamanho do extent, para armazenar discos de VMs - arquivo grande -  talvez extents maior que o default de 4MiB sejam melhores)
- lvcreate -L 49G --thinpool tpool_gluster vg_gluster
- ou
- lvcreate -L 49G -c 64k --thinpool tpool_gluster vg_gluster
-//lvcreate -L 49G -n lv_gluster_samba vg_gluster  //lvdisplay
-lvcreate -V 49G --thin -n lv_gluster_samba vg_gluster/tpool_gluster
-mkfs.ext4 /dev/mapper/vg_gluster-lv_gluster_samba
-mkdir -p /gfs/samba
+apt install lvm2 drbd-utils
+(debian)/lib/systemd/systemd-sysv-install enable drbd
+(ubuntu)systemctl enable drbd.service
 
-cfdisk /dev/sdc (or vdc)
- old- mkfs -t ext4 /dev/sdc1 (or vdc1)
-pvcreate /dev/sdc1 (or vdc1) //pvscan
-vgcreate vg_gluster_shares /dev/sdc1 (or vdc1) //vgdisplay
- lvcreate -L 1023G --thinpool tpool_gluster_shares vg_gluster_shares
- ou
- lvcreate -L 1023G -c 64k --thinpool tpool_gluster_shares vg_gluster_shares
-//lvcreate -L 1023G -n lv_gluster_samba vg_gluster  //lvdisplay
-lvcreate -V 1023G --thin -n lv_gluster_samba_shares vg_gluster_shares/tpool_gluster_shares
-mkfs.ext4 /dev/mapper/vg_gluster_shares-lv_gluster_samba_shares
-mkdir -p /gfs/samba_shares
+cfdisk /dev/vdb
+pvcreate /dev/vdb1
+vgcreate vg_drbd /dev/vdb1 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_drbd vg_drbd
+lvs (para mostrar tamanho alocado e usar na linha abaixo)
 
+/etc/drbd.d/global_common.conf
+        startup {
+                wfc-timeout  15;
+                degr-wfc-timeout 60;
+        }
+        net {
+                cram-hmac-alg sha1;
+                shared-secret "secret";
+        }
 
-vi /etc/fstab
- old- /dev/sdb1       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
-/dev/mapper/vg_gluster-lv_gluster_samba       /gfs/samba   ext4    user_xattr,acl,barrier=1 1 1
-/dev/mapper/vg_gluster_shares-lv_gluster_samba_shares       /gfs/samba_shares   ext4    user_xattr,acl,barrier=1 1 1
+/etc/drbd.d/drbd.res
+resource drbd {
+        on samba-ad-dc01 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_drbd/tpool_drbd;
+                        meta-disk internal;
+                }
+                address 192.168.15.13:7788;
+        }
+        on samba-ad-dc02 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_drbd/tpool_drbd;
+                        meta-disk internal;
+                }
+                address 192.168.15.14:7788;
+        }
+}
+
+#ambos nodes
+drbdadm create-md drbd
+service drbd start
+
+#node 1
+drbdadm primary drbd --force
+
+#node 2
+drbdadm status
+watch -n1 cat /proc/drbd
+
+#node 1
+mkfs.btrfs -v /dev/drbd0
+drbdadm secondary drbd
+
+systemctl disable pacemaker.service
+
+-------
+#split brain
+na vitima:
+drbdadm disconnect drbd
+drbdadm secondary  drbd
+drbdadm connect  --discard-my-data   drbd
+
+no que vai assumir como principal:
+drbdadm disconnect drbd
+drbdadm connect drbd
+
+-------
+#zerar um node secundario para forcar um resync full
+drbdadm down drbd
+drbdadm wipe-md drbd
+drdbadm create-md drbd
+drbdadm up drbd
+-------
+
+-----
+https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/
+9.3. Using automated LVM snapshots during DRBD synchronization
+MTU 9000
+------
+
 
 *Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
 ssh-keygen

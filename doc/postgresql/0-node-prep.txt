@@ -104,7 +104,6 @@ watch -n1 cat /proc/drbd
 mkfs.ext4 -v /dev/drbd0
 drbdadm secondary drbd
 
-systemctl disable corosync.service
 systemctl disable pacemaker.service
 
 -------
