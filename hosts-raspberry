@@ -1,0 +1,15 @@
+[active]
+raspberry01 ansible_host=192.168.16.5 ansible_user=root lb_primary=yes device_id=host01 nodePeer=192.168.16.6
+
+[on_hold]
+raspberry02 ansible_host=192.168.16.6 ansible_user=root lb_slave=yes device_id=host02 nodePeer=192.168.16.5
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+zabbix_server_address=192.168.16.0/24
+master_node_delegate=raspberry01
+git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
+domain_name=mc.intranet
+cluster_vip_ip=192.168.16.7
+cluster_vip_netmask=24
+check_isolation_ip=208.67.220.222

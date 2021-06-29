@@ -1,0 +1,42 @@
+Ubuntu - Raspberry Pi 4
+
+#https://linuxhint.com/kvm_virtualization_raspberry_pi4/
+
+apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon virt-manager libosinfo-bin libguestfs-tools -y
+
+systemctl status libvirtd.service
+
+virsh net-list --all
+virsh net-start default
+virsh net-autostart default
+modprobe vhost_net
+echo "vhost_net" | sudo  tee -a /etc/modules
+lsmod | grep vhost
+
+sudo vi /etc/netplan/50-cloud-init.yaml
+-----------------
+network:
+    ethernets:
+        eth0:
+          dhcp4: no
+        enxd03745ea2d64:
+          dhcp4: no
+    bridges:
+        br0:
+          addresses:
+          - 192.168.16.5/24
+          gateway4: 192.168.16.1
+          nameservers:
+            addresses:
+            - 192.168.16.1
+            search:
+            - jp.intranet
+          interfaces:
+            - eth0
+        br1:
+          addresses:
+          - 10.0.0.10/24
+          interfaces:
+            - enxd03745ea2d64
+    version: 2
+------------------------

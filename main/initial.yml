@@ -41,9 +41,11 @@
         url="{{ zabbix_agent_package_url }}"
         dest="/root/{{ zabbix_agent_package_name }}.deb"
         validate_certs=no
+      with_items: "{{ zabbix_agent_package_name | default([]) }}"
 
     - name: Install Zabbix Agent package
       apt: deb="/root/{{ zabbix_agent_package_name }}.deb"
+      with_items: "{{ zabbix_agent_package_name | default([]) }}"
 
     - name: "Install zabbix-agent"
       apt:
