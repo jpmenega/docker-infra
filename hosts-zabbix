@@ -22,3 +22,4 @@ mysql_vip_netmask=24
 mysql_zabbix_password=zabbix_pwd
 cluster_name=zabbix
 check_isolation_ip=208.67.220.222
+drbd_zabbix_volume=drbd0
