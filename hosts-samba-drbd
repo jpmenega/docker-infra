@@ -34,3 +34,4 @@ ltb_mail_smtp_pass=password
 #https://myaccount.google.com/lesssecureapps
 ltb_mail_smtp_port=587
 company_logo=http://descartaveis.medlav.com.br/wp-content/uploads/2020/08/MEDLAV-DESCARTAVEIS.svg
+drbd_samba_volume=drbd0

@@ -100,7 +100,7 @@
     - name: Mount DRBD on primary node only
       mount:
         path: /var/lib/mysql
-        src: /dev/drbd0
+        src: /dev/{{ drbd_zabbix_volume }}
         opts: acl
         fstype: ext4
         state: mounted

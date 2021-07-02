@@ -6,10 +6,14 @@ raspberry02 ansible_host=192.168.16.6 ansible_user=root lb_slave=yes device_id=h
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
+ansible_distribution=Ubuntu
 zabbix_server_address=192.168.16.0/24
+name_server=192.168.16.1
 master_node_delegate=raspberry01
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 domain_name=mc.intranet
 cluster_vip_ip=192.168.16.7
 cluster_vip_netmask=24
 check_isolation_ip=208.67.220.222
+drbd_zabbix_volume=drbd0
+drbd_samba_volume=drbd1

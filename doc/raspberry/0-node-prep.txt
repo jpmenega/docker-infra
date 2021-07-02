@@ -1,0 +1,172 @@
+===========================
+sudo su
+passwd
+
+ip addr show
+netplan apply (se precisar reaplicar o DHCP)
+
+vi /etc/ssh/sshd_config (PermitRootLogin yes)
+service sshd restart
+
+**Acessar agora por SSH
+
+*se precisar setar IP e Hostname
+echo raspberry0? > /etc/hostname
+
+
+sudo vi /etc/netplan/50-cloud-init.yaml
+-----------------
+network:
+    ethernets:
+        eth0:
+          dhcp4: no
+        enxd03745ea2d64:
+          dhcp4: no
+    bridges:
+        br0:
+          addresses:
+          - 192.168.16.5/24
+          gateway4: 192.168.16.1
+          nameservers:
+            addresses:
+            - 192.168.16.1
+            search:
+            - mc.intranet
+          interfaces:
+            - eth0
+        br1:
+          addresses:
+          - 10.0.0.10/24
+          interfaces:
+            - enxd03745ea2d64
+    version: 2
+
+#vim.tiny /etc/resolv.conf
+search mc.intranet
+nameserver 192.168.16.1
+----
+reboot
+netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
+
+apt install drbd-utils
+(debian)/lib/systemd/systemd-sysv-install enable drbd
+(ubuntu)systemctl enable drbd.service
+
+cfdisk /dev/sda 
+sda1 - 10GB para root do S.O.
+sda2 - 30GB Zabbix
+sda3 - 500GB Samba
+
+#Migrar root file sytem para HD externo
+mkfs.ext4 /dev/sda1
+mount /dev/sda1 /mnt
+apt-get install rsync
+rsync -axv / /mnt
+nano /mnt/etc/fstab
+  replace: LABEL=writable  /        ext4   discard,errors=remount-ro       0 1
+  for: /dev/sda1             /               ext4    defaults,noatime  0       1
+nano /boot/firmware/cmdline.txt
+– Change the root=/dev/mmcblk0p2 or root=PARTUUID=xxxxxxxx-02 to /dev/sda1;
+– Add rootdelay=5 at the end of the command.
+  dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/sda1 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait rootdelay=5
+reboot
+
+
+cfdisk /dev/sda
+pvcreate /dev/sda2 (30GB)
+vgcreate vg_zabbix /dev/sda2 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_zabbix vg_zabbix
+lvs (para mostrar tamanho alocado e usar na linha abaixo)
+
+cfdisk /dev/sda
+pvcreate /dev/sda3 (500GB)
+vgcreate vg_samba /dev/sda3 //vgdisplay
+lvcreate -l 100%FREE -c 64k --thinpool tpool_samba vg_samba
+
+/etc/drbd.d/global_common.conf
+        startup {
+                wfc-timeout  15;
+                degr-wfc-timeout 60;
+        }
+        net {
+                cram-hmac-alg sha1;
+                shared-secret "secret";
+        }
+
+/etc/drbd.d/drbd.res
+resource drbd {
+        on raspberry01 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_zabbix/tpool_zabbix;
+                        meta-disk internal;
+                }
+                volume 1 {
+                        device /dev/drbd1;
+                        disk /dev/vg_samba/tpool_samba;
+                        meta-disk internal;
+                }
+                address 192.168.16.5:7788;
+        }
+        on raspberry02 {
+                volume 0 {
+                        device /dev/drbd0;
+                        disk /dev/vg_zabbix/tpool_zabbix;
+                        meta-disk internal;
+                }
+                volume 1 {
+                        device /dev/drbd1;
+                        disk /dev/vg_samba/tpool_samba;
+                        meta-disk internal;
+                }
+                address 192.168.16.6:7788;
+        }
+}
+
+#ambos nodes
+drbdadm create-md drbd
+service drbd start
+
+#node 1
+drbdadm primary drbd --force
+
+#node 2
+drbdadm status
+watch -n1 cat /proc/drbd
+
+#node 1
+mkfs.btrfs /dev/drbd0
+mkfs.btrfs /dev/drbd1
+drbdadm secondary drbd
+
+systemctl disable pacemaker.service
+
+-------
+#split brain
+na vitima:
+drbdadm disconnect drbd
+drbdadm secondary  drbd
+drbdadm connect  --discard-my-data   drbd
+
+no que vai assumir como principal:
+drbdadm disconnect drbd
+drbdadm connect drbd
+
+-------
+#zerar um node secundario para forcar um resync full
+drbdadm down drbd
+drbdadm wipe-md drbd
+drdbadm create-md drbd
+drbdadm up drbd
+-------
+
+-----
+https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/
+9.3. Using automated LVM snapshots during DRBD synchronization
+MTU 9000
+------
+
+*Primeiro node master e worker (necessario para copia das chaves do Corosync pela task de synchronize):
+ssh-keygen
+ssh-copy-id root@<demais_nodes_do_grupo_IP>
+
