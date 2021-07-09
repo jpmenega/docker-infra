@@ -19,6 +19,7 @@ master_node_delegate=samba-ad-dc01
 #gluster_replica_shares=replica 2 samba-ad-dc01:/gfs/samba_shares samba-ad-dc02:/gfs/samba_shares
 cluster_vip_ip=192.168.16.249
 cluster_vip_netmask=24
+cluster_vip_nic=eth0
 #samba_vipbkp_ip=192.168.16.246
 #samba_vipbkp_netmask=24
 cluster_name=samba

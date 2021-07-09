@@ -14,4 +14,5 @@ git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=firebird01
 cluster_vip_ip=192.168.1.240
 cluster_vip_netmask=24
+cluster_vip_nic=eth0
 #cluster_name=firebird
