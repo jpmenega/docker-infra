@@ -166,7 +166,7 @@ mysql_start()
         fi
 
 	if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
-                mount -o acl /dev/drbd0 /var/lib/mysql
+                mount -o acl /dev/<drbd_zabbix_volume> /var/lib/mysql
                 if ! (grep -qs '/var/lib/mysql ' /proc/mounts;) then
                     ocf_log err "Error. Can't mount MySQL DRBD partition."
                     exit $OCF_ERR_GENERIC

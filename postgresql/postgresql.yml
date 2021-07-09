@@ -200,7 +200,7 @@
         mode: "u=rwx,g=rx,o=rx"
 
     - name: Configure pacemaker PostgreSQL VIP
-      shell: "crm configure primitive postgreVIP ocf:heartbeat:IPaddr2 params ip=\"{{ cluster_vip_ip }}\" cidr_netmask=\"{{ cluster_vip_netmask }}\" nic=\"eth0\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > cluster-lb-vip.txt"
+      shell: "crm configure primitive postgreVIP ocf:heartbeat:IPaddr2 params ip=\"{{ cluster_vip_ip }}\" cidr_netmask=\"{{ cluster_vip_netmask }}\" nic=\"{{ cluster_vip_nic }}\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > cluster-lb-vip.txt"
       args:
         chdir: $HOME
         creates: cluster-lb-vip.txt
