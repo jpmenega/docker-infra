@@ -35,6 +35,11 @@
        name: zabbix-server-mysql
        state: present
 
+    - name: "Install zabbix-sql-scripts"
+      apt:
+       name: zabbix-sql-scripts
+       state: present
+
     - name: "Install Zabbix Frontend"
       apt:
        name: zabbix-frontend-php
@@ -194,7 +199,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Import database schema for Zabbix server
-      shell: "zcat /usr/share/doc/zabbix-server-mysql/create.sql.gz | mysql -uzabbix -p'{{ mysql_zabbix_password }}' zabbix > zabbix-mysql-import-schema.txt"
+      shell: "zcat /usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz | mysql -uzabbix -p'{{ mysql_zabbix_password }}' zabbix > zabbix-mysql-import-schema.txt"
       args:
         chdir: $HOME
         creates: zabbix-mysql-import-schema.txt
