@@ -1,13 +1,14 @@
 [database_server]
-zabbix01 ansible_host=192.168.15.19 ansible_user=root
+raspberry01 ansible_host=192.168.16.5 ansible_user=root
 
 [other_nodes]
-zabbix02 ansible_host=192.168.15.20 ansible_user=root
+raspberry02 ansible_host=192.168.16.6 ansible_user=root
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
 domain_name=medlav.intranet
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
-master_node_delegate=zabbix01
+master_node_delegate=raspberry01
 mysql_zabbix_password=zabbix_pwd
-backup_2_restore=/root/zabbix.sql.gz
+#backup_2_restore=/root/zabbix.sql.gz
+backup_2_restore=/usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz

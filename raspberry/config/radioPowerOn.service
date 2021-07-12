@@ -1,0 +1,8 @@
+[Unit]
+After=radioPowerOn.service
+
+[Service]
+ExecStart=/etc/zabbix/scripts/radioPowerOn.sh
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,38 @@
+#https://bestmonitoringtools.com/how-to-install-zabbix-server-on-ubuntu/
+- hosts: active
+  become: yes
+  tasks:
+    - name: "apt update"
+      apt:
+       update_cache: true
+
+    - name: "Install GPIO Python Module for Raspberry"
+      apt:
+       name: python3-rpi.gpio
+       state: present
+
+    - name: Create Zabbix script folder
+      file:
+        path: /etc/zabbix/scripts
+        state: directory
+
+    - name: Download Raspberry relay scripts
+      unarchive:
+        src: {{ git_source }}/raspberry/scripts/radio.tar.gz
+        dest: /etc/zabbix/scripts
+        remote_src: yes
+
+    - name: Grant executable permissions
+      shell: "chmod 700 /etc/zabbix/scripts/*.sh"
+
+    - name: Download radioPowerOn boot service script
+      get_url:
+        url: {{ git_source }}/raspberry/config/radioPowerOn.service
+        dest: /etc/systemd/system/radioPowerOn.service
+
+    - name: Reload daemons
+      shell: "systemctl daemon-reload"
+
+    - name: Enable radioPowerOn.service on boot
+      shell: "systemctl enable radioPowerOn.service"
+
