@@ -395,7 +395,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Zabbix service
-      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
+      shell: "crm configure primitive zabbixSVC ocf:heartbeat:zabbixSVC params conffile=/etc/zabbix/zabbix_server.conf op monitor interval=10s timeout=60s op start timeout=120s interval=0 op stop timeout=120s interval=0 meta migration-threshold=10 > lb-zabbix-service.txt"
       args:
        chdir: $HOME
        creates: lb-zabbix-service.txt
@@ -403,7 +403,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Configure pacemaker Apache Frontend service
-      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=60s interval=0 op stop timeout=60s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
+      shell: "crm configure primitive apache2SVC ocf:heartbeat:apache2 params conffile=/etc/samba/apache.conf op monitor interval=10s timeout=60s op start timeout=120s interval=0 op stop timeout=120s interval=0 meta migration-threshold=10 > lb-apache2-service.txt"
       args:
        chdir: $HOME
        creates: lb-apache2-service.txt
@@ -436,6 +436,14 @@
 
     - name: Configure stickiness to avoid unnecessary move on recover
       shell: "crm configure rsc_defaults resource-stickiness=100 > lb-zabbix-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: lb-zabbix-stickiness.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure resource start/stop order
+      shell: "crm configure order o-1 mysqlSVC zabbixSVC apache2SVC symmetrical=true > lb-zabbix-order.txt"
       args:
        chdir: $HOME
        creates: lb-zabbix-stickiness.txt

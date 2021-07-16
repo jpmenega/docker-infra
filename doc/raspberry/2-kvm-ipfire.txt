@@ -1,0 +1,18 @@
+Hypervisor
+
+apt install sysstat
+apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst libvirt-daemon virt-manager libosinfo-bin libguestfs-tools -y
+
+cd /var/lib/libvirt/boot
+wget https://downloads.ipfire.org/releases/ipfire-2.x/2.25-core157/ipfire-2.25.2gb-ext4.aarch64-full-core157.img.xz
+cd /var/lib/libvirt/images
+cp ../boot/ipfire-2.25.2gb-ext4.aarch64-full-core157.img.xz .
+xz -d ipfire-2.25.2gb-ext4.aarch64-full-core157.img.xz
+
+virt-install --import --virt-type=kvm --name ipfire01 --ram 1024 --vcpus=1 --os-variant=debian10 --arch=aarch64 --network=bridge=br0,model=virtio --network=bridge=br1,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/ipfire-2.25.2gb-ext4.aarch64-full-core157.img,bus=virtio,format=raw
+
+#virsh console ipfire01
+#virsh vncdisplay <Domain_VM_Name>
+VNC     #ssh root@192.168.16.5 -L 5900:127.0.0.1:5900
+
+#virsh undefine --nvram ipfire01
