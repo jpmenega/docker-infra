@@ -7,7 +7,9 @@ firebird02 ansible_host=192.168.1.247 ansible_user=root lb_slave=yes device_id=h
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
 domain_name=uz.intranet
-firebird_package_url=https://raw.githubusercontent.com/jpmenega/docker-infra/firebird/fb-2.5.9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
+#https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
+firebird_package_url=https://github.com/jpmenega/docker-infra/raw/main/firebird/fb-2.5.9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
+firebird_package_name=FirebirdCS-2.5.9.27139-0.amd64.tar.gz
 firebird_package_folder=/root/FirebirdCS-2.5.9.27139-0.amd64
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb

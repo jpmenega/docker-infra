@@ -6,26 +6,38 @@
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
-    - name: Create Firebird data folder
-      file:
-        path: /opt/firebird/DB
-        state: directory
+    - name: "Install unzip"
+      apt:
+       name: unzip
+       state: present
+       update_cache: true
 
-    - name: Download and unarchive Firebird installation
+    - name: Download Firebird installation
+      get_url:
+        url: "{{ firebird_package_url }}"
+        dest: /root
+
+    - name: Unarchive Firebird installation
       unarchive:
-        src: {{ firebird_package_url }}
+        src: "{{ firebird_package_name }}"
         dest: /root
         remote_src: yes
+
+    - name: "Install libncurses5"
+      apt:
+       name: libncurses5
+       state: present
+       update_cache: true
 
     - name: Install Firebird
       shell: "./install.sh -silent"
       args:
-        chdir: firebird_package_folder
+        chdir: "{{ firebird_package_folder }}"
 
-    - name: Disable service firebird
-      service:
-        name: firebird.service
-        enabled: no
+    - name: Create Firebird data folder
+      file:
+        path: /opt/firebird/DB
+        state: directory
 
     - name: Put nodes at stand by mode
       shell: "crm node standby {{ inventory_hostname }} > firebird-lb-standby.txt"
