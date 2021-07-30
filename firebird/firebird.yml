@@ -1,0 +1,79 @@
+- hosts: active
+  become: yes
+  tasks:
+    - name: Turn primary node as DRBD primary
+      shell: "drbdadm primary drbd"
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create Firebird data folder
+      file:
+        path: /opt/firebird/DB
+        state: directory
+
+    - name: Download and unarchive Firebird installation
+      unarchive:
+        src: {{ firebird_package_url }}
+        dest: /root
+        remote_src: yes
+
+    - name: Install Firebird
+      shell: "./install.sh -silent"
+      args:
+        chdir: firebird_package_folder
+
+    - name: Disable service firebird
+      service:
+        name: firebird.service
+        enabled: no
+
+    - name: Put nodes at stand by mode
+      shell: "crm node standby {{ inventory_hostname }} > firebird-lb-standby.txt"
+      args:
+        chdir: $HOME
+        creates: firebird-lb-standby.txt
+
+    - name: Download crm PostgreSQL script
+      shell: "wget {{ git_source }}/firebird/scripts/firebirdSVC"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/firebirdSVC
+
+    - name: change Firebird script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/firebirdSVC
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Configure pacemaker Firebird VIP
+      shell: "crm configure primitive firebirdVIP ocf:heartbeat:IPaddr2 params ip=\"{{ cluster_vip_ip }}\" cidr_netmask=\"{{ cluster_vip_netmask }}\" nic=\"{{ cluster_vip_nic }}\" op monitor interval=\"10s\" meta migration-threshold=\"10\" > cluster-lb-vip.txt"
+      args:
+        chdir: $HOME
+        creates: cluster-lb-vip.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Firebird service
+      shell: "crm configure primitive firebirdSVC ocf:heartbeat:firebirdSVC params conffile=/etc/postgresql/11/main/postgresql.conf op monitor interval=10s timeout=60s op start timeout=180s interval=0 op stop timeout=180s interval=0 meta migration-threshold=10 > cluster-lb-service.txt"
+      args:
+       chdir: $HOME
+       creates: cluster-lb-service.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Firebird group
+      shell: "crm configure group grp_balancing firebirdVIP firebirdSVC > cluster-lb-group.txt"
+      args:
+       chdir: $HOME
+       creates: cluster-lb-group.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Configure stickiness to avoid unnecessary move on recover
+      shell: "crm configure rsc_defaults resource-stickiness=100 > cluster-lb-stickiness.txt"
+      args:
+       chdir: $HOME
+       creates: cluster-lb-stickiness.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
