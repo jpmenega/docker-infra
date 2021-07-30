@@ -1,3 +1,4 @@
+virt-install --virt-type=kvm --name firebird01 --ram 1024 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/firebird01.qcow2,size=10,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/firebird01-drbd.qcow2,size=30,bus=virtio,format=qcow2 
 ===========================
 sudo su
 passwd
@@ -36,15 +37,15 @@ network:
 #vim.tiny /etc/network/interfaces
 auto eth0
 iface eth0 inet static
-  address 192.168.16.241
+  address 192.168.1.241
   netmask 255.255.255.0
-  gateway 192.168.16.1
-  dns-nameservers 192.168.16.1
+  gateway 192.168.1.1
+  dns-nameservers 192.168.1.1
   mtu 9000
 
 #vim.tiny /etc/resolv.conf
-search medlav.intranet
-nameserver 192.168.16.1
+search uz.intranet
+nameserver 192.168.1.1
 ----
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)

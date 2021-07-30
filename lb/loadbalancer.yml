@@ -114,7 +114,7 @@
     - name: Disable service Corosync
       service:
         name: corosync.service
-        enabled: no
+        enabled: yes
 
     - name: Start Pacemaker
       service:
