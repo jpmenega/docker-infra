@@ -1,0 +1,244 @@
+#!/bin/bash
+#
+# Resource script for Firebird daemon
+#
+# Description:  Manages firebird daemon as an OCF resource in
+#               an High Availability setup.
+#
+#       usage: $0 {start|stop|status|monitor|validate-all|meta-data}
+#
+#       The "start" arg starts firebird.
+#
+#       The "stop" arg stops it.
+#
+# OCF parameters:
+# OCF_RESKEY_binpath
+# OCF_RESKEY_conffile
+# OCF_RESKEY_extraconf
+#
+# Note:This RA requires that the firebird config files has a "pidfile"
+# entry so that it is able to act on the correct process
+##########################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/resource.d/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/.ocf-shellfuncs
+
+USAGE="Usage: $0 {start|stop|status|monitor|validate-all|meta-data}";
+
+##########################################################################
+
+usage()
+{
+        echo $USAGE >&2
+}
+
+meta_data()
+{
+cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="firebird">
+<version>1.0</version>
+<longdesc lang="en">
+This script manages firebird daemon
+</longdesc>
+<shortdesc lang="en">Manages a firebird daemon</shortdesc>
+
+<parameters>
+
+<parameter name="binpath">
+<longdesc lang="en">
+The firebird binary path.
+For example, "/opt/firebird/bin/fbguard"
+</longdesc>
+<shortdesc lang="en">Full path to the firebird binary</shortdesc>
+<content type="string" default="/opt/firebird/bin/fbguard"/>
+</parameter>
+
+<parameter name="conffile">
+<longdesc lang="en">
+The firebird daemon configuration file name with full path.
+For example, "/opt/firebird/firebird.conf"
+</longdesc>
+<shortdesc lang="en">Configuration file name with full path</shortdesc>
+<content type="string" default="/opt/firebird/firebird.conf" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start" timeout="20s"/>
+<action name="stop" timeout="20s"/>
+<action name="monitor" depth="0" timeout="20s" interval="60s" />
+<action name="validate-all" timeout="20s"/>
+<action name="meta-data"  timeout="5s"/>
+</actions>
+</resource-agent>
+END
+exit $OCF_SUCCESS
+}
+
+get_pid_and_conf_file()
+{
+        #if [ -n "$OCF_RESKEY_conffile" ]; then
+        #        CONF_FILE=$OCF_RESKEY_conffile
+        #else
+        #        CONF_FILE="/opt/firebird/firebird.conf"
+        #fi
+
+        #PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
+        #if [ "${PIDFILE}" = '' ]; then
+                PIDFILE="/run/firebird.pid"
+        #fi
+}
+
+firebird_status()
+{
+        if [ -n "$PIDFILE" -a -f "$PIDFILE" ]; then
+                # firebird is probably running
+                PID=`cat $PIDFILE`
+                if [ -n "$PID" ]; then
+                        if ps -p $PID | grep fbguard >/dev/null ; then
+                                ocf_log info "info firebird daemon running"
+                                return $OCF_SUCCESS
+                        else
+                                ocf_log info "firebird daemon is not running but pid file exists"
+                                return $OCF_NOT_RUNNING
+                        fi
+                else
+                        ocf_log err "PID file empty!"
+                        return $OCF_ERR_GENERIC
+                fi
+        fi
+
+        # firebird is not running
+        ocf_log info "firebird daemon is not running"
+        return $OCF_NOT_RUNNING
+}
+
+firebird_start()
+{
+        # if firebird is running return success
+        firebird_status
+        retVal=$?
+        if [ $retVal -eq $OCF_SUCCESS ]; then
+                exit $OCF_SUCCESS
+	elif [ $retVal -ne $OCF_NOT_RUNNING ]; then
+                ocf_log err "Error. Unknown status."
+                exit $OCF_ERR_GENERIC
+        fi
+
+	drbdadm primary drbd --force
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+                ocf_log err "Error. Can't bring DRBD node as primary."
+                exit $OCF_ERR_GENERIC
+        fi
+
+        if ! (grep -qs '/opt/firebird/DB ' /proc/mounts;) then
+                mount -o acl /dev/drbd0 /opt/firebird/DB
+                if ! (grep -qs '/opt/firebird/DB ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount firebird DRBD partition."
+                    exit $OCF_ERR_GENERIC
+                fi
+        fi
+
+	/opt/firebird/bin/fbguard -pidfile /run/firebird.pid -daemon -forever
+
+	sleep 1
+        firebird_status
+        retVal=$?
+        if [ $retVal -eq $OCF_NOT_RUNNING ]; then
+                ocf_log err "Error. Unknown status."
+                exit $OCF_ERR_GENERIC
+        fi
+
+        ocf_log info "Started firebird daemon."
+        exit $OCF_SUCCESS
+}
+
+firebird_stop()
+{
+	if firebird_status ; then
+		killproc -p /run/firebird.pid firebird
+		sleep 1
+		if firebird_status ; then
+			killall fbguard
+		fi
+        fi
+        umount -f /opt/firebird/DB
+        drbdadm secondary drbd
+
+        ocf_log info "Stopped firebird daemon."
+        exit $OCF_SUCCESS
+}
+
+firebird_monitor()
+{
+        firebird_status
+}
+
+firebird_validate_all()
+{
+        if [ -n "$OCF_RESKEY_binpath" -a ! -x "$OCF_RESKEY_binpath" ]; then
+                ocf_log err "Binary path $OCF_RESKEY_binpath does not exist."
+                exit $OCF_ERR_ARGS
+        fi
+        if [ -n "$OCF_RESKEY_conffile" -a ! -f "$OCF_RESKEY_conffile" ]; then
+                ocf_log err "Config file $OCF_RESKEY_conffile does not exist."
+                exit $OCF_ERR_ARGS
+        fi
+
+        #if  grep -v "^#" "$CONF_FILE" | grep "pidfile" > /dev/null ; then
+        #        :
+        #else
+        #        ocf_log err "Error. \"pidfile\" entry required in the firebird config file
+        #        return $OCF_ERR_GENERIC
+        #fi
+
+        return $OCF_SUCCESS
+}
+
+
+#
+# Main
+#
+
+if [ $# -ne 1 ]; then
+        usage
+        exit $OCF_ERR_ARGS
+fi
+
+case $1 in
+        start)  get_pid_and_conf_file
+                firebird_start
+                ;;
+
+        stop)   get_pid_and_conf_file
+                firebird_stop
+                ;;
+
+        status) get_pid_and_conf_file
+                firebird_status
+                ;;
+
+        monitor)get_pid_and_conf_file
+                firebird_monitor
+                ;;
+
+        validate-all)   get_pid_and_conf_file
+                        firebird_validate_all
+                        ;;
+
+        meta-data)      meta_data
+                        ;;
+
+        usage)  usage
+                exit $OCF_SUCCESS
+                ;;
+
+        *)      usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
+esac
