@@ -1,0 +1,38 @@
+wget https://github.com/FirebirdSQL/firebird/releases/download/v4.0.0/Firebird-4.0.0.2496-0.amd64.tar.gz
+
+https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
+
+tar -xzvf Firebird-4.0.0.2496-0.amd64.tar.gz
+
+apt install libtommath1
+cd Firebird-4.0.0.2496-0.amd64/
+./install.sh -silent
+
+//disable firebird service
+
+cd ..
+rm -r -f Firebird-4.0.0.2496-0.amd64
+
+
+cat /opt/firebird/SYSDBA.password (get password)
+./gsec -user sysdba -pass <password -mo sysdba -pw <new password>
+
+./gsec -user sysdba -pass masterkey -mo sysdba -pw gbkuz03
+
+
+----------------
+vim.tiny /opt/firebird/firebird.conf
+WireCrypt = Disabled
+AuthServer = Legacy_Auth, Srp, Win_Sspi
+AuthClient = Legacy_Auth, Srp, Win_Sspi
+
+-------------------
+Backup
+./gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/data/opt/samba/banco/uz/siga.fdb /tmp/siga.fbk
+
+./gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/data/opt/samba/banco/uz/siga.fdb /tmp/siga.fbk
+./gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/data/opt/samba/banco/uz/dbsn.fdb /tmp/dbsn.fbk
+
+Restore
+./gbak -user SYSBDA -pas gbkuz03 -r -o /tmp/siga.fbk /opt/firebird/DB/UZ/siga.fdb
+./gbak -user SYSBDA -pas gbkuz03 -r -o /tmp/dbsn.fbk /opt/firebird/DB/UZ/dbsn.fdb
