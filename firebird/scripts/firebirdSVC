@@ -88,9 +88,9 @@ get_pid_and_conf_file()
         #fi
 
         #PIDFILE="`grep -v \"#\" ${CONF_FILE} | grep \"pidfile\" | sed 's/^[ \t]*pidfile[ \t]*//'`"
-        #if [ "${PIDFILE}" = '' ]; then
+        if [ "${PIDFILE}" = '' ]; then
                 PIDFILE="/run/firebird.pid"
-        #fi
+        fi
 }
 
 firebird_status()
@@ -99,7 +99,7 @@ firebird_status()
                 # firebird is probably running
                 PID=`cat $PIDFILE`
                 if [ -n "$PID" ]; then
-                        if ps -p $PID | grep fbguard >/dev/null ; then
+                        if ps -p $PID | grep fb_smp_server >/dev/null ; then
                                 ocf_log info "info firebird daemon running"
                                 return $OCF_SUCCESS
                         else
@@ -161,10 +161,10 @@ firebird_start()
 firebird_stop()
 {
 	if firebird_status ; then
-		killproc -p /run/firebird.pid firebird
+		kill `cat /run/firebird.pid`
 		sleep 1
 		if firebird_status ; then
-			killall fbguard
+			killall fb_smp_server
 		fi
         fi
         umount -f /opt/firebird/DB
