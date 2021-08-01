@@ -34,6 +34,17 @@
       args:
         chdir: "{{ firebird_package_folder }}"
 
+    - name: Kill fbguard
+      shell: "killall fbguard"
+
+    - name: Kill fbserver
+      shell: "killall fbserver"
+
+    - name: Disable firebird service
+      service:
+        name: firebird.service
+        enabled: no
+
     - name: Create Firebird data folder
       file:
         path: /opt/firebird/DB
