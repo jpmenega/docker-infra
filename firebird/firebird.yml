@@ -37,8 +37,8 @@
     - name: Kill fbguard
       shell: "killall fbguard"
 
-    - name: Kill fbserver
-      shell: "killall fbserver"
+    #- name: Kill fbserver
+    #  shell: "killall fbserver"
 
     - name: Disable firebird service
       service:
