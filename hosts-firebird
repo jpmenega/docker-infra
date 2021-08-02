@@ -1,7 +1,7 @@
-[active]
+[on_hold]
 firebird01 ansible_host=192.168.1.246 ansible_user=root lb_primary=yes device_id=host01
 
-[on_hold]
+[active]
 firebird02 ansible_host=192.168.1.247 ansible_user=root lb_slave=yes device_id=host02
 
 [all:vars]

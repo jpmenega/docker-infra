@@ -14,6 +14,8 @@ ansible-playbook -i hosts-firebird ~/docker-cluster/main/initial.yml
 ansible-playbook -i hosts-firebird ~/docker-cluster/lb/loadbalancer.yml
 
 ansible-playbook -i hosts-firebird ~/docker-cluster/firebird/firebird.yml
+cat /opt/firebird/SYSDBA.password (get password)
+/opt/firebird/bin/gsec -user sysdba -pass <current_password> -mo sysdba -pw <new_password>
 
 ansible-playbook -i hosts-firebird ~/docker-cluster/firebird/backup-client.yml
 # comando para instalar o cliente, mas nao usar esse, usar URL local que ja tem a chave do cliente...

@@ -1,6 +1,6 @@
 wget https://github.com/FirebirdSQL/firebird/releases/download/v4.0.0/Firebird-4.0.0.2496-0.amd64.tar.gz
 
-https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz
+https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdSS-2.5.9.27139-0.amd64.tar.gz
 
 tar -xzvf Firebird-4.0.0.2496-0.amd64.tar.gz
 
@@ -15,9 +15,7 @@ rm -r -f Firebird-4.0.0.2496-0.amd64
 
 
 cat /opt/firebird/SYSDBA.password (get password)
-./gsec -user sysdba -pass <password -mo sysdba -pw <new password>
-
-./gsec -user sysdba -pass masterkey -mo sysdba -pw gbkuz03
+./gsec -user sysdba -pass <current_password> -mo sysdba -pw <new password>
 
 
 ----------------
