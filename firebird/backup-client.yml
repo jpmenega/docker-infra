@@ -1,0 +1,119 @@
+- hosts: active
+  become: yes
+  tasks:
+    - name: Stop urbackupclientbackend
+      service:
+        name: urbackupclientbackend
+        state: stopped
+
+    - name: Disable service urbackupclientbackend
+      service:
+        name: urbackupclientbackend.service
+        enabled: no
+
+    - name: Turn primary node as DRBD primary
+      shell: "drbdadm primary drbd"
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Mount DRBD on primary node only
+      mount:
+        path: /opt/firebird/DB
+        src: /dev/drbd0
+        opts: acl
+        fstype: ext4
+        state: mounted
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Create urbackup folder
+      ansible.builtin.file:
+        path: /opt/firebird/DB/urbackup/
+        state: directory
+        mode: '0755'
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Move usr-local
+      command: mv /usr/local/* /opt/firebird/DB/urbackup/ -R
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Remove local folder
+      command: mv /usr/local /usr/local-tag
+
+    - name: Create a symbolic link
+      ansible.builtin.file:
+        src: /opt/firebird/DB/urbackup/
+        dest: /usr/local
+        state: link
+
+    - name: Download pre UrBackup job script
+      get_url:
+        url: "{{ git_source }}/firebird/scripts/prefilebackup"
+        dest: /usr/local/etc/urbackup/
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: change pre UrBackup job script permission
+      file:
+        path: /usr/local/etc/urbackup/prefilebackup
+        state: touch
+        mode: "u+rwx,g-rwx,o-rwx"
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Download post UrBackup job script
+      get_url:
+        url: "{{ git_source }}/firebird/scripts/postfilebackup"
+        dest: /usr/local/etc/urbackup/
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: change post UrBackup job script permission
+      file:
+        path: /usr/local/etc/urbackup/postfilebackup
+        state: touch
+        mode: "u+rwx,g-rwx,o-rwx"
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Download crm urbackup script
+      shell: "wget {{ git_source }}/firebird/scripts/urbackup"
+      args:
+        chdir: /usr/lib/ocf/resource.d/heartbeat
+        creates: /usr/lib/ocf/resource.d/heartbeat/urbackup
+
+    - name: change urbackup script permission
+      file:
+        path: /usr/lib/ocf/resource.d/heartbeat/urbackup
+        state: touch
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Configure pacemaker Firebird service Bkp
+      shell: "crm configure primitive firebirdSVCBkp ocf:heartbeat:urbackup op monitor interval=10s ti
+      args:
+       chdir: $HOME
+       creates: lb-servicebkp.txt
+      when: lb_primary == "yes"
+      with_items: "{{ lb_primary | default([]) }}"
+
+    - name: Configure pacemaker Firebird Bkp group
+      shell: "crm configure group grp_balancing firebirdVIP firebirdSVC firebirdSVCBkp > lb-groupbkp.t
+      args:
+       chdir: $HOME
+       creates: lb-groupbkp.txt
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Unmount DRBD
+      mount:
+        path: /opt/firebird/DB
+        state: unmounted
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Turn primary node back as DRBD secondary
+      shell: "drbdadm secondary drbd"
+      when: lb_primary == "yes"
+      with_items: "{{ (lb_primary | default([])) }}"
