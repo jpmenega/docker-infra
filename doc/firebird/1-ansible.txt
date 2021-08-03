@@ -17,8 +17,11 @@ ansible-playbook -i hosts-firebird firebird/firebird.yml
 cat /opt/firebird/SYSDBA.password (get password)
 /opt/firebird/bin/gsec -user sysdba -pass <current_password> -mo sysdba -pw <new_password>
 
-# comando para instalar o cliente, mas nao usar esse, usar URL local que ja tem a chave do cliente...
-TF=$(mktemp) && wget "https://hndl.urbackup.org/Client/2.4.11/UrBackup%20Client%20Linux%202.4.11.sh" -O $TF && sudo sh $TF; rm -f $TF
-# criar client no UrBackup server e pegar a linha de codigo para executar nos clientes ja com a chave
+BACKUP
+-cria servidor na console do UrBackup (Internet client/client behind NAT)
+-copia URL/script para instalacao (ainda nao instala)
+-configura o schedule/path etc na console
+-instala o client e para o servico
+service urbackupclientbackend stop
 ansible-playbook -i hosts-firebird firebird/backup-client.yml
 
