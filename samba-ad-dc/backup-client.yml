@@ -20,12 +20,12 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Move usr-local
-      command: mv /usr/local/* /var/lib/samba/urbackup/ -R
+      shell: "mv /usr/local/* /var/lib/samba/urbackup/"
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Remove local folder
-      command: mv /usr/local /usr/local-tag
+      shell: "mv /usr/local /usr/local-tag"
 
     - name: Create a symbolic link
       ansible.builtin.file:
