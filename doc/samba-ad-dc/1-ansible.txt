@@ -8,21 +8,21 @@ Source script server
 mkdir ~/docker-cluster
 cd ~/docker-cluster
 
-nano ~/docker-cluster/hosts-samba (alterar IPs)
+nano hosts-samba (alterar IPs)
 
-ansible-playbook -i hosts-samba ~/docker-cluster/main/initial.yml
-ansible-playbook -i hosts-samba ~/docker-cluster/lb/loadbalancer.yml
+ansible-playbook -i hosts-samba main/initial.yml
+ansible-playbook -i hosts-samba lb/loadbalancer.yml
 
-#ansible-playbook -i hosts-samba ~/docker-cluster/gluster/glusterfs.yml
-ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/samba.yml
+#ansible-playbook -i hosts-samba gluster/glusterfs.yml
+ansible-playbook -i hosts-samba samba-ad-dc/samba.yml
 
 !! Executar setup do Samba pelo Pacemaker antes de configurar o backup
 
-ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/backup-client.yml
+ansible-playbook -i hosts-samba samba-ad-dc/backup-client.yml
 # comando para instalar o cliente, mas nao usar esse, usar URL local que ja tem a chave do cliente...
 TF=$(mktemp) && wget "https://hndl.urbackup.org/Client/2.4.11/UrBackup%20Client%20Linux%202.4.11.sh" -O $TF && sudo sh $TF; rm -f $TF
 # criar client no UrBackup server (Internet client/client behind NAT) e pegar a linha de codigo para executar nos clientes ja com a chave
-ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/backup-client-part2.yml
+ansible-playbook -i hosts-samba samba-ad-dc/backup-client-part2.yml
 
 # smb.conf example
 cd /var/lib/samba
