@@ -86,7 +86,7 @@
       replace:
         path: /usr/lib/ocf/resource.d/heartbeat/sambaSVC
         regexp: 'HOSTIP:-192.168.1.249'
-        replace: 'HOSTIP:-{{ samba_vip_ip }}'
+        replace: 'HOSTIP:-{{ cluster_vip_ip }}'
 
     - name: "Configure Samba volume - drbd_samba_volume"
       replace:

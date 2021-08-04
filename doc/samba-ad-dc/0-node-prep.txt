@@ -94,7 +94,7 @@ drbdadm create-md samba
 service drbd start
 
 #node 1
-drbdadm primary drbd --force
+drbdadm primary samba --force
 
 #node 2
 drbdadm status
