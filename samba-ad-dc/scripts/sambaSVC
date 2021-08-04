@@ -246,7 +246,7 @@ samba_start()
         fi
 
         if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                mount -o acl /dev/drbd0 /var/lib/samba
+                mount -o acl /dev/<drbd_samba_volume> /var/lib/samba
                 if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
                     ocf_log err "Error. Can't mount samba DRBD partition."
                     exit $OCF_ERR_GENERIC

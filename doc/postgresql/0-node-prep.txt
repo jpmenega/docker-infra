@@ -69,9 +69,9 @@ lvs (para mostrar tamanho alocado e usar na linha abaixo)
                 shared-secret "secret";
         }
 
-/etc/drbd.d/drbd.res
-resource drbd {
-        on firebird01 {
+/etc/drbd.d/postgres.res
+resource postgres {
+        on postgresql01 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
@@ -79,7 +79,7 @@ resource drbd {
                 }
                 address 192.168.1.238:7788;
         }
-        on firebird02 {
+        on postgresql02 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
@@ -90,7 +90,7 @@ resource drbd {
 }
 
 #ambos nodes
-drbdadm create-md drbd
+drbdadm create-md postgres
 service drbd start
 
 #node 1

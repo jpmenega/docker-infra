@@ -17,3 +17,4 @@ cluster_vip_nic=eth0
 cluster_vip_netmask=24
 #cluster_name=postgresql
 check_isolation_ip=208.67.220.222
+drbd_postgresql_volume=drbd0

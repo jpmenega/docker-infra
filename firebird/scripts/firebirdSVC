@@ -129,7 +129,7 @@ firebird_start()
                 exit $OCF_ERR_GENERIC
         fi
 
-	drbdadm primary drbd --force
+	drbdadm primary firebird --force
         retVal=$?
         if [ $retVal -ne 0 ]; then
                 ocf_log err "Error. Can't bring DRBD node as primary."
@@ -137,7 +137,7 @@ firebird_start()
         fi
 
         if ! (grep -qs '/opt/firebird/DB ' /proc/mounts;) then
-                mount -o acl /dev/drbd0 /opt/firebird/DB
+                mount -o acl /dev/<drbd_firebird_volume> /opt/firebird/DB
                 if ! (grep -qs '/opt/firebird/DB ' /proc/mounts;) then
                     ocf_log err "Error. Can't mount firebird DRBD partition."
                     exit $OCF_ERR_GENERIC
@@ -168,7 +168,7 @@ firebird_stop()
 		fi
         fi
         umount -f /opt/firebird/DB
-        drbdadm secondary drbd
+        drbdadm secondary firebird
 
         ocf_log info "Stopped firebird daemon."
         exit $OCF_SUCCESS
