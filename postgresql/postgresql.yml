@@ -14,7 +14,7 @@
     - name: Mount DRBD on primary node only
       mount:
         path: /mnt/postgresql
-        src: /dev/drbd0
+        src: /dev/{{ drbd_postgresql_volume }}
         opts: acl
         fstype: ext4
         state: mounted
@@ -192,6 +192,12 @@
         path: /usr/lib/ocf/resource.d/heartbeat/postgreSVC
         regexp: '<nodePeer>'
         replace: '{{ nodePeer }}'
+
+    - name: "Configure postgreSVC script - drbd_postgresql_volume"
+      replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
+        regexp: '<drbd_postgresql_volume>'
+        replace: '{{ drbd_zabbix_volume }}'
 
     - name: change PostgreSQL script permission
       file:

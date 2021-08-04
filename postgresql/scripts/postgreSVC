@@ -152,7 +152,7 @@ postgresql_start()
             exit $OCF_ERR_GENERIC
         fi
 
-	drbdadm primary drbd --force
+	drbdadm primary postgres --force
         retVal=$?
         if [ $retVal -ne 0 ]; then
                 ocf_log err "Error. Can't bring DRBD node as primary."
@@ -160,7 +160,7 @@ postgresql_start()
         fi
 
         if ! (grep -qs '/mnt/postgresql ' /proc/mounts;) then
-                mount -o acl /dev/drbd0 /mnt/postgresql
+                mount -o acl /dev/<drbd_postgresql_volume> /mnt/postgresql
                 if ! (grep -qs '/mnt/postgresql ' /proc/mounts;) then
                     ocf_log err "Error. Can't mount postgresql DRBD partition."
                     exit $OCF_ERR_GENERIC
@@ -193,7 +193,7 @@ postgresql_stop()
 		fi
         fi
         umount -f /mnt/postgresql
-        drbdadm secondary drbd
+        drbdadm secondary postgres
 
         ocf_log info "Stopped postgresql daemon."
         exit $OCF_SUCCESS

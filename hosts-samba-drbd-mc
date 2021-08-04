@@ -1,0 +1,34 @@
+[active]
+samba-ad-dc01 ansible_host=192.168.20.2 ansible_user=root lb_primary=yes gluster=no device_id=host01
+
+[on_hold]
+samba-ad-dc02 ansible_host=192.168.20.3 ansible_user=root lb_slave=yes gluster=no device_id=host02
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+domain_name=mc.intranet
+domain_name_upper=MC.INTRANET
+domain_password=M0st1yC10udy
+dns_server=192.168.20.1
+zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
+zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb
+zabbix_server_address=192.168.20.0/24
+git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
+master_node_delegate=samba-ad-dc01
+cluster_vip_ip=192.168.20.6
+cluster_vip_netmask=24
+cluster_vip_nic=eth0
+cluster_name=samba
+ltb_token=M0st1yC10udy
+ltb_binddn=cn=Administrator,cn=Users,dc=mc,dc=intranet
+ltb_bindpw=M0st1yC10udy
+ltb_base=dc=mc,dc=intranet
+ltb_mail_from=mc.mostlycloudy@gmail.com
+ltb_mail_from_name=MC Intranet - Reset de senha
+ltb_mail_smtp_host=smtp.gmail.com
+ltb_mail_smtp_user=mc.mostlycloudy@gmail.com
+ltb_mail_smtp_pass=password
+#https://myaccount.google.com/lesssecureapps
+ltb_mail_smtp_port=587
+company_logo=https://static.wixstatic.com/media/867ddd_9e2d33d238604264a7756e14430d2ade~mv2.png/v1/fill/w_179,h_55,al_c,q_85,usm_0.66_1.00_0.01/logo%20cloud%20back%20yellow%20text_PNG.webp
+drbd_samba_volume=drbd1

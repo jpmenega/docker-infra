@@ -10,12 +10,12 @@ cd ~/docker-cluster
 
 nano ~/docker-cluster/hosts-zabbix (alterar IPs)
 
-ansible-playbook -i hosts-zabbix ~/docker-cluster/main/initial.yml
-#ansible-playbook -i hosts-zabbix ~/docker-cluster/docker/docker.yml
+ansible-playbook -i hosts-zabbix main/initial.yml
+#ansible-playbook -i hosts-zabbix docker/docker.yml
 
-#ansible-playbook -i hosts-zabbix ~/docker-cluster/gluster/glusterfs.yml
-ansible-playbook -i hosts-zabbix ~/docker-cluster/lb/loadbalancer.yml
-ansible-playbook -i hosts-zabbix ~/docker-cluster/zabbix/zabbix.yml
+#ansible-playbook -i hosts-zabbix gluster/glusterfs.yml
+ansible-playbook -i hosts-zabbix lb/loadbalancer.yml
+ansible-playbook -i hosts-zabbix zabbix/zabbix.yml
 
 --------------------
 Know issues:

@@ -68,9 +68,9 @@ lvs (para mostrar tamanho alocado e usar na linha abaixo)
                 shared-secret "secret";
         }
 
-/etc/drbd.d/drbd.res
-resource drbd {
-        on firebird01 {
+/etc/drbd.d/zabbix.res
+resource zabbix {
+        on zabbix01 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
@@ -78,7 +78,7 @@ resource drbd {
                 }
                 address 192.168.15.19:7788;
         }
-        on firebird02 {
+        on zabbix02 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
@@ -89,13 +89,13 @@ resource drbd {
 }
 
 #ambos nodes
-drbdadm create-md drbd
+drbdadm create-md zabbix
 service drbd start
 (debian)/lib/systemd/systemd-sysv-install enable drbd
 (ubuntu)systemctl enable drbd.service
 
 #node 1
-drbdadm primary drbd --force
+drbdadm primary zabbix --force
 
 #node 2
 drbdadm status
@@ -103,7 +103,7 @@ watch -n1 cat /proc/drbd
 
 #node 1
 mkfs.ext4 -v /dev/drbd0
-drbdadm secondary drbd
+drbdadm secondary zabbix
 
 systemctl disable corosync.service
 systemctl disable pacemaker.service
