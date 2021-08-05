@@ -1,4 +1,4 @@
-virt-install --virt-type=kvm --name firebird01 --ram 1024 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/firebird01.qcow2,size=10,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/firebird01-drbd.qcow2,size=30,bus=virtio,format=qcow2 
+virt-install --virt-type=kvm --name firebird3201 --ram 1024 --vcpus=2 --os-variant=generic26 --cdrom=/var/lib/libvirt/boot/debian-10.10.0-i386-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/firebird3201.qcow2,size=10,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/firebird3201-drbd.qcow2,size=30,bus=virtio,format=qcow2
 ===========================
 sudo su
 passwd
@@ -70,21 +70,21 @@ lvs (para mostrar tamanho alocado e usar na linha abaixo)
 
 /etc/drbd.d/drbd.res
 resource drbd {
-        on firebird01 {
+        on firebird3201 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
                         meta-disk internal;
                 }
-                address 192.168.1.238:7788;
+                address 192.168.1.246:7788;
         }
-        on firebird02 {
+        on firebird3202 {
                 volume 0 {
                         device /dev/drbd0;
                         disk /dev/vg_drbd/tpool_drbd;
                         meta-disk internal;
                 }
-                address 192.168.1.239:7788;
+                address 192.168.1.247:7788;
         }
 }
 
