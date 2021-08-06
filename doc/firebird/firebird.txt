@@ -37,3 +37,9 @@ Restore
 
 UDF libs
 http://firebirdsql.org/en/writing-udfs-for-interbase/
+
+----------------
+Exemplos de select UZ
+Select udf_nvl(P1PVEN) FROM P1;
+Select udf_rounddec(P1PVEN, 2) FROM P1;
+Select P1PVEN FROM P1;

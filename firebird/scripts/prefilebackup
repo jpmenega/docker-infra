@@ -9,50 +9,99 @@ mkdir $bkp_folder
 echo "Create convergence dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/convergence/siga.fdb $bkp_folder/convergence-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/convergence/dbsn.fdb $bkp_folder/convergence-dbsn.fbk
+gzip -f -9 $bkp_folder/convergence-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/convergence/dbsn.fdb $bkp_folder/convergence-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/convergence-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create planeta dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/planeta/siga.fdb $bkp_folder/planeta-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/planeta/dbsn.fdb $bkp_folder/planeta-dbsn.fbk
+gzip -f -9 $bkp_folder/planeta-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/planeta/dbsn.fdb $bkp_folder/planeta-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/planeta-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create supercol dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/supercol/siga.fdb $bkp_folder/supercol-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/supercol/dbsn.fdb $bkp_folder/supercol-dbsn.fbk
+gzip -f -9 $bkp_folder/supercol-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/supercol/dbsn.fdb $bkp_folder/supercol-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/supercol-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create unidadezero dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/unidadezero/siga.fdb $bkp_folder/unidadezero-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/unidadezero/dbsn.fdb $bkp_folder/unidadezero-dbsn.fbk
+gzip -f -9 $bkp_folder/unidadezero-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/unidadezero/dbsn.fdb $bkp_folder/unidadezero-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/unidadezero-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create uz dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uz/siga.fdb $bkp_folder/uz-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uz/dbsn.fdb $bkp_folder/uz-dbsn.fbk
+gzip -f -9 $bkp_folder/uz-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uz/dbsn.fdb $bkp_folder/uz-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/uz-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create uztestes siga_carlos dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_carlos/siga.fdb $bkp_folder/uztestes-siga_carlos-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_carlos/dbsn.fdb $bkp_folder/uztestes-siga_carlos-dbsn.fbk
+gzip -f -9 $bkp_folder/uztestes-siga_carlos-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_carlos/dbsn.fdb $bkp_folder/uztestes-siga_carlos-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/uztestes-siga_carlos-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create uztestes siga_fios dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_fios/siga.fdb $bkp_folder/uztestes-siga_fios-siga.fbk
 [ $? -eq 0 ]  || exit 1
-$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_fios/dbsn.fdb $bkp_folder/uztestes-siga_fios-dbsn.fbk
+gzip -f -9 $bkp_folder/uztestes-siga_fios-siga.fbk
 [ $? -eq 0 ]  || exit 1
 
+$gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/siga_fios/dbsn.fdb $bkp_folder/uztestes-siga_fios-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/uztestes-siga_fios-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+#------------------------------
 echo "Create uztestes teste_minas dumps" >> /tmp/urbackup.log
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/teste_minas/siga.fdb $bkp_folder/uztestes-teste_minas-siga.fbk
 [ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/uztestes-teste_minas-siga.fbk
+[ $? -eq 0 ]  || exit 1
+
 $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/teste_minas/dbsn.fdb $bkp_folder/uztestes-teste_minas-dbsn.fbk
 [ $? -eq 0 ]  || exit 1
+gzip -f -9 $bkp_folder/uztestes-teste_minas-dbsn.fbk
+[ $? -eq 0 ]  || exit 1
+
+rm -r -f $bkp_folder/*.fbk
 
 echo "Dump success" >> /tmp/urbackup.log
 echo "Dump success"

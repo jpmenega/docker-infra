@@ -1,8 +1,8 @@
-[on_hold]
-firebird3201 ansible_host=192.168.1.246 ansible_user=root lb_primary=yes device_id=host01
-
 [active]
+firebird3201 ansible_host=192.168.1.246 ansible_user=root lb_primary=yes device_id=host01
 firebird3202 ansible_host=192.168.1.247 ansible_user=root lb_slave=yes device_id=host02
+
+[on_hold]
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
