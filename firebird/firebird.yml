@@ -17,20 +17,35 @@
         url: "{{ firebird_package_url }}"
         dest: /root
 
+    - name: Download Firebird UDF lib
+      get_url:
+        url: "{{ firebird_lib_url }}"
+        dest: {{ firebird_package_folder }}
+
     - name: Unarchive Firebird installation
       unarchive:
         src: "{{ firebird_package_name }}"
         dest: /root
         remote_src: yes
 
-    - name: "Install libncurses5"
+    - name: Install Firebird
+      shell: "./install.sh -silent"
+      args:
+        chdir: "{{ firebird_package_folder }}"
+
+    - name: "Install gcc"
       apt:
-       name: libncurses5
+       name: gcc
        state: present
        update_cache: true
 
-    - name: Install Firebird
-      shell: "./install.sh -silent"
+    - name: Compile tbudf.c ==> tbudf.o
+      shell: "gcc -c -O -fpic tbudf.c"
+      args:
+        chdir: "{{ firebird_package_folder }}"
+
+    - name: Link tbudf.o ==> tbudf.so
+      shell: "ld -G tbudf.o -lm -lc -o /opt/firebird/UDF/tbudf.so"
       args:
         chdir: "{{ firebird_package_folder }}"
 
