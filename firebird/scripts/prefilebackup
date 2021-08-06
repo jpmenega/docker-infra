@@ -101,7 +101,7 @@ $gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/opt/firebird/DB/uztestes/test
 gzip -f -9 $bkp_folder/uztestes-teste_minas-dbsn.fbk
 [ $? -eq 0 ]  || exit 1
 
-rm -r -f $bkp_folder/*.fbk
+#rm -r -f $bkp_folder/*.fbk
 
 echo "Dump success" >> /tmp/urbackup.log
 echo "Dump success"
