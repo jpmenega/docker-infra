@@ -1,10 +1,10 @@
 - hosts: active
   become: yes
   tasks:
-    - name: Turn primary node as DRBD primary
-      shell: "drbdadm primary drbd"
-      when: lb_primary == "yes"
-      with_items: "{{ (lb_primary | default([])) }}"
+    #- name: Turn primary node as DRBD primary
+    #  shell: "drbdadm primary drbd"
+    #  when: lb_primary == "yes"
+    #  with_items: "{{ (lb_primary | default([])) }}"
 
     - name: "Install unzip"
       apt:
@@ -15,12 +15,7 @@
     - name: Download Firebird installation
       get_url:
         url: "{{ firebird_package_url }}"
-        dest: /root
-
-    - name: Download Firebird UDF lib
-      get_url:
-        url: "{{ firebird_lib_url }}"
-        dest: {{ firebird_package_folder }}
+        dest: /root/
 
     - name: Unarchive Firebird installation
       unarchive:
@@ -38,6 +33,11 @@
        name: gcc
        state: present
        update_cache: true
+
+    - name: Download Firebird UDF lib
+      get_url:
+        url: "{{ firebird_lib_url }}"
+        dest: "{{ firebird_package_folder }}/"
 
     - name: Compile tbudf.c ==> tbudf.o
       shell: "gcc -c -O -fpic tbudf.c"

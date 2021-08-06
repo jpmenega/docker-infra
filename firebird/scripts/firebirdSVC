@@ -129,7 +129,7 @@ firebird_start()
                 exit $OCF_ERR_GENERIC
         fi
 
-	drbdadm primary firebird --force
+	drbdadm primary drbd --force
         retVal=$?
         if [ $retVal -ne 0 ]; then
                 ocf_log err "Error. Can't bring DRBD node as primary."
@@ -168,7 +168,7 @@ firebird_stop()
 		fi
         fi
         umount -f /opt/firebird/DB
-        drbdadm secondary firebird
+        drbdadm secondary drbd
 
         ocf_log info "Stopped firebird daemon."
         exit $OCF_SUCCESS

@@ -14,8 +14,11 @@ ansible-playbook -i hosts-firebird main/initial.yml
 ansible-playbook -i hosts-firebird lb/loadbalancer.yml
 
 ansible-playbook -i hosts-firebird firebird/firebird.yml
-cat /opt/firebird/SYSDBA.password (get password)
-/opt/firebird/bin/gsec -user sysdba -pass <current_password> -mo sysdba -pw <new_password>
+#cat /opt/firebird/SYSDBA.password (get password)
+#service firebird start
+#/opt/firebird/bin/gsec -user sysdba -pass <current_password> -mo sysdba -pw <new_password>
+#service firebird stop
+#rm /opt/firebird/SYSDBA.password
 
 BACKUP
 -cria servidor na console do UrBackup (Internet client/client behind NAT)
