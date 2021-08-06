@@ -20,10 +20,10 @@ ansible-playbook -i hosts-firebird firebird/firebird.yml
 #service firebird stop
 #rm /opt/firebird/SYSDBA.password
 
-BACKUP
+BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar os arquivos)
 -cria servidor na console do UrBackup (Internet client/client behind NAT)
 -copia URL/script para instalacao (ainda nao instala)
--configura o schedule/path etc na console
+-configura o schedule/path etc na console (pasta para bkp /tmp/backup)
 -instala o client e para o servico
 service urbackupclientbackend stop
 ansible-playbook -i hosts-firebird firebird/backup-client.yml
