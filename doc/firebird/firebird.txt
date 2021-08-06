@@ -32,5 +32,8 @@ Backup
 ./gbak -b -user SYSDBA -pas gbkuz03 localhost/3050:/data/opt/samba/banco/uz/dbsn.fdb /tmp/dbsn.fbk
 
 Restore
-./gbak -user SYSBDA -pas gbkuz03 -r -o /tmp/siga.fbk /opt/firebird/DB/UZ/siga.fdb
-./gbak -user SYSBDA -pas gbkuz03 -r -o /tmp/dbsn.fbk /opt/firebird/DB/UZ/dbsn.fdb
+./gbak -user SYSDBA -pas gbkuz03 -r -o /tmp/siga.fbk /opt/firebird/DB/UZ/siga.fdb
+./gbak -user SYSDBA -pas gbkuz03 -r -o /tmp/dbsn.fbk /opt/firebird/DB/UZ/dbsn.fdb
+
+UDF libs
+http://firebirdsql.org/en/writing-udfs-for-interbase/
