@@ -23,6 +23,12 @@
         dest: /root
         remote_src: yes
 
+    - name: "Install libncurses5"
+      apt:
+       name: libncurses5
+       state: present
+       update_cache: true
+
     - name: Install Firebird
       shell: "./install.sh -silent"
       args:
