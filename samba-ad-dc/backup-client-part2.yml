@@ -30,6 +30,12 @@
       when: lb_primary == "yes"
       with_items: "{{ lb_primary | default([]) }}"
 
+    - name: Configure UrBackup Job script password
+      replace:
+        path: /usr/local/etc/urbackup/prefilebackup
+        regexp: '<domain_password>'
+        replace: '{{ domain_password }}'
+
     - name: Download post UrBackup job script
       get_url:
         url: "{{ git_source }}/samba-ad-dc/scripts/postfilebackup"

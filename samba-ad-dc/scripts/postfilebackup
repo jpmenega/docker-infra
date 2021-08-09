@@ -1,18 +1,11 @@
 #!/bin/bash
-echo "umount snapshot" >> /tmp/urbackup.log
-umount /mnt/samba
-echo "deactivate snapshot" >> /tmp/urbackup.log
-echo y|gluster snapshot deactivate snap-backup
-echo "delete snapshot" >> /tmp/urbackup.log
-echo y|gluster snapshot delete snap-backup
-
-echo "umount snapshot shares" >> /tmp/urbackup.log
-umount /mnt/shares
-echo "deactivate snapshot shares" >> /tmp/urbackup.log
-echo y|gluster snapshot deactivate snap-backup-shares
-echo "delete snapshot shares" >> /tmp/urbackup.log
-echo y|gluster snapshot delete snap-backup-shares
-
-echo "done" >> /tmp/urbackup.log
+echo "$(date) Remove snapshot" >> /tmp/drbd-snapshot.log
+btrfs subvolume delete /var/lib/samba/.snapshots/backup
+if [ -d "/var/lib/samba/.snapshots/backup" ]; then
+        echo "$(date) Fail removing snapshot" >> /tmp/drbd-snapshot.log
+        exit 1
+else
+        echo "$(date) Success removing snapshot" >> /tmp/drbd-snapshot.log
+fi
 exit 0
 

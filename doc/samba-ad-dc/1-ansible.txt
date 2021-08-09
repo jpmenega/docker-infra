@@ -42,3 +42,8 @@ smbstatus #acaba validando o smb.conf
 
 # antes setar a senha do SMTP no hosts-samba (ltb_mail_smtp_pass=)
 ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/self-service-password.yml
+
+# Backup/Restore
+https://wiki.samba.org/index.php/Back_up_and_Restoring_a_Samba_AD_DC
+samba-tool domain backup online --targetdir=<output-dir> --server=<DC-server> -UAdministrator
+samba-tool domain backup restore --backup-file=<tar-file> --newservername=<DC-name> --targetdir=<new-samba-dir>
