@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <math.h>
+#include <string.h>
 
 double udf_NVL(double *);
 double udf_NVL(a)
@@ -18,5 +19,14 @@ unsigned char *n;
 {
         double pow_10 = pow(10.0f, (double)*n);
         return round(*x * pow_10) / pow_10;
+}
+
+int udf_Len(char *);
+int udf_Len(s)
+char *s;
+{
+        size_t len;
+        len = strlen(s);
+        return len;
 }
 

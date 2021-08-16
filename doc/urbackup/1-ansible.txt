@@ -10,6 +10,6 @@ cd ~/docker-cluster
 
 nano ~/docker-cluster/hosts-urbackup (alterar IPs)
 
-ansible-playbook -i hosts-urbackup ~/docker-cluster/main/initial.yml
-ansible-playbook -i hosts-urbackup ~/docker-cluster/backup/urbackup-server.yml
-ansible-playbook -i hosts-urbackup ~/docker-cluster/backup/urbackup-monitor.yml
+ansible-playbook -i hosts-urbackup main/initial.yml
+ansible-playbook -i hosts-urbackup backup/urbackup-server.yml
+ansible-playbook -i hosts-urbackup backup/urbackup-monitor.yml

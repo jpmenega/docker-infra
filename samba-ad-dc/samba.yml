@@ -3,12 +3,7 @@
   tasks:
     - name: Create Samba data folder
       file:
-        path: /var/lib/samba
-        state: directory
-
-    - name: Create Samba shares folder
-      file:
-        path: /var/lib/samba-shares
+        path: /mnt/samba
         state: directory
 
     - name: Install packages

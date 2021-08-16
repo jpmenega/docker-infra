@@ -12,6 +12,12 @@
        state: present
        update_cache: true
 
+    - name: "Install cifs-utils"
+      apt:
+       name: cifs-utils
+       state: present
+       update_cache: true
+
     - name: Install UrBackup
       command: apt-get install -y urbackup-server
       environment:
@@ -22,8 +28,8 @@
         name: urbackupsrv.service
         state: stopped
 
-    - name: Mount NFS volume (if mounted)
-      ansible.posix.mount:
+    - name: Unmount NFS volume (if mounted)
+      mount:
         path: /media/BACKUP/urbackup
         state: unmounted
 
@@ -37,13 +43,13 @@
         path: /media/BACKUP/urbackup
         state: directory
 
-    - name: Ensure we have NFS starogate in /etc/fstab
-      ansible.builtin.lineinfile:
+    - name: Ensure we have share storage in /etc/fstab
+      lineinfile:
         path: /etc/fstab
-        regexp: '^{{ backup_storage_nfs }}'
-        line: '{{ backup_storage_nfs }}   /media/BACKUP/urbackup  nfs     defaults        0       0'
+        regexp: '^{{ backup_storage_share }}'
+        line: '{{ backup_storage_share }}   /media/BACKUP/urbackup  {{ backup_storage_mount_options }}'
 
-    - name: Mount NFS volume
+    - name: Mount share volume
       command: mount /media/BACKUP/urbackup
 
     - name: Restore UrBackup backup

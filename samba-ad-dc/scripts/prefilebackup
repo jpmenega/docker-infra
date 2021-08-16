@@ -1,13 +1,20 @@
 #!/bin/bash
 echo "$(date) Backup Samba database" > /tmp/drbd-snapshot.log
-rm -r -f /var/lib/samba/backup/*.bz2
-/usr/bin/samba-tool domain backup online --targetdir=/var/lib/samba/backup -UAdministrator --server=192.168.1.249 --password=<domain_password>
+cp -f /etc/samba/smb.conf /var/lib/samba/DATA/samba-backup/
+rm -r -f /var/lib/samba/DATA/samba-backup/*.bz2
+/usr/bin/samba-tool domain backup online --targetdir=/var/lib/samba/DATA/samba-backup -UAdministrator --server=192.168.1.249 --password=<domain_password>
 [ $? -eq 0 ]  || exit 1
-rm -r -f /var/lib/samba/backup/tmp*
+rm -r -f /var/lib/samba/DATA/samba-backup/tmp*
 
 echo "$(date) Create snapshot" >> /tmp/drbd-snapshot.log
-btrfs subvolume snapshot -r /var/lib/samba/ /var/lib/samba/.snapshots/backup
-if [ -d "/var/lib/samba/.snapshots/backup" ]; then
+if [ -d "/var/lib/samba/DATA/.snapshots" ]; then
+	echo "$(date) BTRFS snapshot folder already exist" >> /tmp/drbd-snapshot.log
+else
+	mkdir /var/lib/samba/DATA/.snapshots
+	echo "$(date) Created BTRFS snapshot folder" >> /tmp/drbd-snapshot.log
+fi
+btrfs subvolume snapshot -r /var/lib/samba/DATA /var/lib/samba/DATA/.snapshots/backup
+if [ -d "/var/lib/samba/DATA/.snapshots/backup" ]; then
         echo "$(date) Success snapshot" >> /tmp/drbd-snapshot.log
 else
         echo "$(date) Fail snapshot" >> /tmp/drbd-snapshot.log
