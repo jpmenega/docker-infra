@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "$(date) Remove snapshot" >> /tmp/drbd-snapshot.log
-btrfs subvolume delete /var/lib/samba/.snapshots/backup
-if [ -d "/var/lib/samba/.snapshots/backup" ]; then
+btrfs subvolume delete /var/lib/samba/DATA/.snapshots/backup
+if [ -d "/var/lib/samba/DATA/.snapshots/backup" ]; then
         echo "$(date) Fail removing snapshot" >> /tmp/drbd-snapshot.log
         exit 1
 else

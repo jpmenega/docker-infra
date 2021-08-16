@@ -16,13 +16,17 @@ ansible-playbook -i hosts-samba lb/loadbalancer.yml
 #ansible-playbook -i hosts-samba gluster/glusterfs.yml
 ansible-playbook -i hosts-samba samba-ad-dc/samba.yml
 
-!! Executar setup do Samba pelo Pacemaker antes de configurar o backup
+cd /usr/lib/ocf/resource.d/heartbeat/
+./sambaSVC start (para criar um novo database do Samba)
+
+BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar os arquivos)
+-cria servidor na console do UrBackup (Internet client/client behind NAT)
+-copia URL/script para instalacao (ainda nao instala)
+-configura o schedule/path etc na console (pasta para bkp /tmp/backup)
+-instala o client e para o servico
+service urbackupclientbackend stop
 
 ansible-playbook -i hosts-samba samba-ad-dc/backup-client.yml
-# comando para instalar o cliente, mas nao usar esse, usar URL local que ja tem a chave do cliente...
-TF=$(mktemp) && wget "https://hndl.urbackup.org/Client/2.4.11/UrBackup%20Client%20Linux%202.4.11.sh" -O $TF && sudo sh $TF; rm -f $TF
-# criar client no UrBackup server (Internet client/client behind NAT) e pegar a linha de codigo para executar nos clientes ja com a chave
-ansible-playbook -i hosts-samba samba-ad-dc/backup-client-part2.yml
 
 # smb.conf example
 cd /var/lib/samba
@@ -31,6 +35,7 @@ wget https://raw.githubusercontent.com/jpmenega/docker-infra/main/samba-ad-dc/ex
 
 # share permissions
 https://superuser.com/questions/1459741/samba-ad-dc-windows-explorer-exe-crashes-on-security-tab-access
+https://dev.tranquil.it/samba/en/samba_advanced_methods/samba_backup_restore_rename.html  (check ACL do Sysvol e outros)
 samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
 (UZ)samba-tool ntacl set "O:BAG:DUD:PAI(A;OICI;0x001f01ff;;;DA)(A;;0x001f01ff;;;BA)(A;;0x001200a9;;;DU)"
 samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/volumes/

@@ -192,6 +192,9 @@ samba_setup () {
                 fi
                 # Once we are set up, we'll make a file so that we know to use it if we ever spin this up again
                 cp /etc/samba/smb.conf /var/lib/samba/smb.conf
+		mkdir /var/lib/samba/DATA
+		mkdir /var/lib/samba/DATA/shares
+		mkdir /var/lib/samba/DATA/samba-backup
         else
                 cp /var/lib/samba/smb.conf /etc/samba/smb.conf
         fi
@@ -275,6 +278,11 @@ samba_stop()
                 sleep 2
         fi
         umount -f /var/lib/samba
+	retVal=$?
+        if [ $retVal -ne 0 ]; then
+                ocf_log err "Error. Can't umount /var/lib/samba"
+                exit $OCF_ERR_GENERIC
+        fi
         drbdadm secondary samba
 
         ocf_log info "Stopped samba daemon."

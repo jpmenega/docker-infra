@@ -1,16 +1,21 @@
 [active]
-urbackup01 ansible_host=192.168.1.245 ansible_user=root lb_primary=yes
+urbackup01 ansible_host=192.168.15.23 ansible_user=root lb_primary=yes
 
 [on_hold]
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
-domain_name=uz.intranet
-zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bubuntu20.04_all.deb
-zabbix_agent_package_name=zabbix-release_5.2-1+ubuntu20.04_all.deb
-zabbix_server_address=192.168.1.0/24
+domain_name=medlav.intranet
+#zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bubuntu20.04_all.deb
+#zabbix_agent_package_name=zabbix-release_5.2-1+ubuntu20.04_all.deb
+zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
+zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb
+zabbix_server_address=192.168.15.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=urbackup01
-backup_storage_nfs=192.168.1.2:/urbackup
+#backup_storage_share=192.168.20.11:/Volume1
+#backup_storage_mount_options="nfs     defaults        0       0"
+backup_storage_share=//192.168.15.10/urbackup
+backup_storage_mount_options="ntfs-3g defaults,windows_names,locale=pt_BR.utf8,user=urbackup,pass=URB@ckup 0 0"
 backup_monitor_user=zabbix
-backup_monitor_password=pED4zKs2GNnmtWGM
+backup_monitor_password=pED4zKs!GNnmtWGM

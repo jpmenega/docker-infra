@@ -1,3 +1,5 @@
+virt-install --virt-type=kvm --name urbackup01 --ram 2048 --vcpus=2 --os-variant=debian10 --cdrom=/var/lib/libvirt/boot/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/urbackup01.qcow2,size=30,bus=virtio,format=qcow2 
+
 ===========================
 sudo su
 passwd
@@ -13,22 +15,19 @@ service sshd restart
 *se precisar setar IP e Hostname
 echo urbackup0? > /etc/hostname
 
-vi /etc/netplan/00-installer-config.yaml
------
-network:
-  ethernets:
-    enp0s3:
-      addresses:
-      - 192.168.1.x/24
-      gateway4: 192.168.1.1
-      mtu: 9000
-      nameservers:
-        addresses:
-        - 192.168.1.1
-        search:
-        - uz.intranet
-  version: 2
------
+#vim.tiny /etc/network/interfaces
+auto enp1s0
+iface enp1s0 inet static
+  address 192.168.15.23
+  netmask 255.255.255.0
+  gateway 192.168.15.1
+  dns-nameservers 192.168.15.1
+  mtu 9000
+
+#vim.tiny /etc/resolv.conf
+search medlav.intranet
+nameserver 192.168.15.1
+
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
