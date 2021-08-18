@@ -14,11 +14,3 @@ ansible-playbook -i hosts-urbackup main/initial.yml
 ansible-playbook -i hosts-urbackup backup/urbackup-server.yml
 ansible-playbook -i hosts-urbackup backup/urbackup-monitor.yml
 
-BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar os arquivos)
--cria servidor na console do UrBackup (Internet client/client behind NAT)
--copia URL/script para instalacao (ainda nao instala)
--configura o schedule/path etc na console (pasta para bkp /tmp/backup)
--instala o client e para o servico
-service urbackupclientbackend stop
-
-ansible-playbook -i hosts-samba backup/backup-client.yml

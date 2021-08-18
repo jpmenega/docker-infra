@@ -21,13 +21,13 @@
         path: /mnt/postgresql
         src: /dev/{{ drbd_postgresql_volume }}
         opts: acl
-        fstype: btrfs
+        fstype: ext4
         state: mounted
       when: lb_primary == "yes"
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Create urbackup folder
-      ansible.builtin.file:
+      file:
         path: /mnt/postgresql/urbackup/
         state: directory
         mode: '0755'
@@ -43,10 +43,11 @@
       shell: "mv /usr/local /usr/local-tag"
 
     - name: Create a symbolic link
-      ansible.builtin.file:
+      file:
         src: /mnt/postgresql/urbackup/
         dest: /usr/local
         state: link
+        force: yes
 
 #    - name: Download pre UrBackup job script
 #      get_url:
@@ -95,6 +96,12 @@
         path: /usr/lib/ocf/resource.d/heartbeat/urbackup
         state: touch
         mode: "u=rwx,g=rx,o=rx"
+
+    - name: "Configure urbackup script - drbd_postgresql_volume"
+      replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/urbackup
+        regexp: '<drbd_postgresql_volume>'
+        replace: '{{ drbd_postgresql_volume }}'
 
     - name: Configure pacemaker service Bkp
       shell: "crm configure primitive postgresqlSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-servicebkp.txt"

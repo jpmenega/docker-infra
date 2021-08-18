@@ -197,7 +197,7 @@
       replace:
         path: /usr/lib/ocf/resource.d/heartbeat/mysqlSVC
         regexp: '<drbd_postgresql_volume>'
-        replace: '{{ drbd_zabbix_volume }}'
+        replace: '{{ drbd_postgresql_volume }}'
 
     - name: change PostgreSQL script permission
       file:
