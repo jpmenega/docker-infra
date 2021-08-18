@@ -16,6 +16,6 @@ master_node_delegate=urbackup01
 #backup_storage_share=192.168.20.11:/Volume1
 #backup_storage_mount_options="nfs     defaults        0       0"
 backup_storage_share=//192.168.15.10/urbackup
-backup_storage_mount_options="ntfs-3g defaults,windows_names,locale=pt_BR.utf8,user=urbackup,pass=URB@ckup 0 0"
+backup_storage_mount_options="cifs user=urbackup,pass=URB@ckup,,uid=?,gid=? 0 0"
 backup_monitor_user=zabbix
 backup_monitor_password=pED4zKs!GNnmtWGM

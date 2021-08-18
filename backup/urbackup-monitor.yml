@@ -18,13 +18,13 @@
         dest: /etc/zabbix
 
     - name: "Configure script credentials - user"
-      ansible.builtin.replace:
+      replace:
         path: /etc/zabbix/backup_status.py
         regexp: '<user>'
         replace: '{{ backup_monitor_user }}'
 
     - name: "Configure script credentials - password"
-      ansible.builtin.replace:
+      replace:
         path: /etc/zabbix/backup_status.py
         regexp: '<password>'
         replace: '{{ backup_monitor_password }}'

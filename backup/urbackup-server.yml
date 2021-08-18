@@ -2,9 +2,16 @@
 - hosts: active
   become: yes
   tasks:
-    - name: Add UrBackup repository
+    - name: Add UrBackup repository - Ubuntu
       apt_repository:
         repo: 'ppa:uroni/urbackup'
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Download UrBackup package - Debian
+      get_url:
+        url: https://hndl.urbackup.org/Server/2.4.13/urbackup-server_2.4.13_amd64.deb
+        dest: /root
+      when: ansible_distribution == 'Debian'
 
     - name: "Install nfs-common"
       apt:
@@ -18,10 +25,69 @@
        state: present
        update_cache: true
 
-    - name: Install UrBackup
+    - name: Install UrBackup - Ubuntu
       command: apt-get install -y urbackup-server
       environment:
         DEBIAN_FRONTEND: noninteractive
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install libcurl3-nss - Debian
+      apt:
+       name: libcurl3-nss
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install sqlite3 - Debian
+      apt:
+       name: sqlite3
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install qemu-utils - Debian
+      apt:
+       name: qemu-utils
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install libnss3 - Debian
+      apt:
+       name: libnss3
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install libguestfs-tools - Debian
+      apt:
+       name: libguestfs-tools
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install libnspr4 - Debian
+      apt:
+       name: libnspr4
+       state: present
+       update_cache: true
+      when: ansible_distribution == 'Debian'
+
+    - name: Install UrBackup - Debian
+      command: "dpkg -i urbackup-server_2.4.13_amd64.deb"
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      args:
+        chdir: /root
+      when: ansible_distribution == 'Debian'
+
+    #- name: Install UrBackup dependencies - Debian
+    #  command: "apt install -f"
+    #  environment:
+    #    DEBIAN_FRONTEND: noninteractive
+    #  args:
+    #    chdir: /root
+    #  when: ansible_distribution == 'Debian'
 
     - name: Stop urbackupsrv
       service:
