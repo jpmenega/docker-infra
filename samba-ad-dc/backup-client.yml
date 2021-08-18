@@ -96,6 +96,12 @@
         state: touch
         mode: "u=rwx,g=rx,o=rx"
 
+    - name: "Configure urbackup script - drbd_samba_volume"
+      replace:
+        path: /usr/lib/ocf/resource.d/heartbeat/urbackup
+        regexp: '<drbd_samba_volume>'
+        replace: '{{ drbd_samba_volume }}'
+
     - name: Configure pacemaker Samba service Bkp
       shell: "crm configure primitive sambaSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-servicebkp.txt"
       args:

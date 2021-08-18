@@ -49,7 +49,7 @@ This script manages urbackup daemon
 
 <parameter name="binpath">
 <longdesc lang="en">
-The samba binary path.
+The urbackup binary path.
 For example, "/usr/local/sbin/urbackupclientbackend"
 </longdesc>
 <shortdesc lang="en">Full path to the urbackup binary</shortdesc>
@@ -89,7 +89,7 @@ urbackup_status()
 
 urbackup_start()
 {
-        # if samba is running return success
+        # if urbackup is running return success
         urbackup_status
         retVal=$?
         if [ $retVal -eq $OCF_SUCCESS ]; then
@@ -105,10 +105,10 @@ urbackup_start()
                 COMMAND="/usr/local/sbin/urbackupclientbackend"
         fi
 
-	if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                mount -o acl /dev/drbd0 /var/lib/samba
-                if ! (grep -qs '/var/lib/samba ' /proc/mounts;) then
-                    ocf_log err "Error. Can't mount samba DRBD partition."
+	if ! (grep -qs '/mnt/postgresql ' /proc/mounts;) then
+                mount -o acl /dev/<drbd_postgresql_volume> /mnt/postgresql
+                if ! (grep -qs '/mnt/postgresql ' /proc/mounts;) then
+                    ocf_log err "Error. Can't mount postgresql DRBD partition."
                     exit $OCF_ERR_GENERIC
                 fi
         fi
@@ -162,7 +162,7 @@ urbackup_validate_all()
         #if  grep -v "^#" "$CONF_FILE" | grep "pidfile" > /dev/null ; then
         #        :
         #else
-        #        ocf_log err "Error. \"pidfile\" entry required in the samba config file by samba OCF RA."
+        #        ocf_log err "Error. \"pidfile\" entry required in the urbackup config file by urbackup OCF RA."
         #        return $OCF_ERR_GENERIC
         #fi
 

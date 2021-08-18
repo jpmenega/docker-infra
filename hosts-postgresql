@@ -1,8 +1,8 @@
-[on_hold]
-postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01 nodePeer=192.168.15.17
-
 [active]
+postgresql01 ansible_host=192.168.15.16 ansible_user=root lb_primary=yes device_id=host01 nodePeer=192.168.15.17
 postgresql02 ansible_host=192.168.15.17 ansible_user=root lb_slave=yes device_id=host02 nodePeer=192.168.15.16
+
+[on_hold]
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
