@@ -104,7 +104,7 @@
         replace: '{{ drbd_postgresql_volume }}'
 
     - name: Configure pacemaker service Bkp
-      shell: "crm configure primitive postgresqlSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-servicebkp.txt"
+      shell: "crm configure primitive postgreSVCBkp ocf:heartbeat:urbackup op monitor interval=10s timeout=60s op start timeout=30s interval=0 op stop timeout=30s interval=0 meta migration-threshold=10 > lb-servicebkp.txt"
       args:
        chdir: $HOME
        creates: lb-servicebkp.txt
@@ -112,7 +112,7 @@
       with_items: "{{ lb_primary | default([]) }}"
 
     - name: Add pacemaker Bkp to group
-      shell: "crm configure show grp_balancing | sed 's/$/ postgresqlSVCBkp/' | crm configure load update - > lb-groupbkp.txt"
+      shell: "crm configure show grp_balancing | sed 's/$/ postgreSVCBkp/' | crm configure load update - > lb-groupbkp.txt"
       args:
        chdir: $HOME
        creates: lb-groupbkp.txt

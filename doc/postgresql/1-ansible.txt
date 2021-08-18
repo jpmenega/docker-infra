@@ -19,9 +19,12 @@ BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar o
 -cria servidor na console do UrBackup (Internet client/client behind NAT)
 -copia URL/script para instalacao (ainda nao instala)
 TF=`mktemp` && wget "http://10.214.157.23:55414/x?a=download_client&lang=en&clientid=1&authkey=irXaApwGXv&os=linux" -O $TF && sudo sh $TF; rm -f $TF
--configura o schedule/path etc na console (pasta para bkp /tmp/backup)
+-configura o schedule file backup (sem path) etc na console
 -instala o client e para o servico
 service urbackupclientbackend stop
 
 ansible-playbook -i hosts-postgresql postgresql/backup-client.yml
 
+#Enable PostgreSQL backup
+https://www.urbackup.org/backup_postgresql.html
+(Dump) On Linux with the binary client: Change 0 to 1 in /usr/local/etc/urbackup/postgresqldump.conf.
