@@ -235,6 +235,13 @@
         line="        php_value date.timezone America/Sao_Paulo"
         state=present
 
+    - name: "Configure Zabbix Mysql password"
+      lineinfile:
+        dest=/etc/zabbix/zabbix_server.conf
+        regexp='^Timeout='
+        line="Timeout=30"
+        state=present
+
     - name: Download Frontend database connection config
       shell: "wget {{ git_source }}/zabbix/config/zabbix.conf.php"
       args:

@@ -67,6 +67,7 @@
             Include=/etc/zabbix/zabbix_agentd.d/*.conf
             Hostname={{ ansible_hostname }}
             AllowKey=system.run[*]
+            Timeout=30
 
     - name: gluster-monitoring.pl
       shell: "wget {{ git_source }}/main/zabbix-agent/gluster-monitoring.pl"

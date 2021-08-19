@@ -252,3 +252,8 @@
     #   creates: postgresql-lb-prefer.txt
     #  when: lb_primary == "yes"
     #  with_items: "{{ (lb_primary | default([])) }}"
+
+    - name: Download PostgreSQL Zabbix monitoring template
+      get_url:
+        url: "{{ git_source }}/postgresql/config/template_db_postgresql.conf"
+        dest: /etc/zabbix/zabbix_agentd.d/

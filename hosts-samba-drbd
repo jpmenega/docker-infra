@@ -1,6 +1,6 @@
 [active]
-samba-ad-dc01 ansible_host=192.168.1.241 ansible_user=root lb_primary=yes gluster=no device_id=host01
-samba-ad-dc02 ansible_host=192.168.1.242 ansible_user=root lb_slave=yes gluster=no device_id=host02
+samba-ad-dc01 ansible_host=192.168.15.13 ansible_user=root lb_primary=yes gluster=no device_id=host01
+samba-ad-dc02 ansible_host=192.168.15.14 ansible_user=root lb_slave=yes gluster=no device_id=host02
 
 [on_hold]
 
@@ -9,19 +9,15 @@ ansible_python_interpreter=/usr/bin/python3
 domain_name=medlav.intranet
 domain_name_upper=MEDLAV.INTRANET
 domain_password=<password>
-dns_server=192.168.1.1
+dns_server=192.168.15.1
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb
-zabbix_server_address=192.168.16.0/24
+zabbix_server_address=192.168.15.0/24
 git_source=https://raw.githubusercontent.com/jpmenega/docker-infra/main
 master_node_delegate=samba-ad-dc01
-#gluster_replica=replica 2 samba-ad-dc01:/gfs/samba samba-ad-dc02:/gfs/samba
-#gluster_replica_shares=replica 2 samba-ad-dc01:/gfs/samba_shares samba-ad-dc02:/gfs/samba_shares
-cluster_vip_ip=192.168.16.249
+cluster_vip_ip=192.168.15.15
 cluster_vip_netmask=24
 cluster_vip_nic=eth0
-#samba_vipbkp_ip=192.168.16.246
-#samba_vipbkp_netmask=24
 cluster_name=samba
 ltb_token=M3dl@v
 ltb_binddn=cn=Administrator,cn=Users,dc=medlav,dc=intranet
