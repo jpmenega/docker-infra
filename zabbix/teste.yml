@@ -1,0 +1,10 @@
+#https://bestmonitoringtools.com/how-to-install-zabbix-server-on-ubuntu/
+- hosts: active
+  become: yes
+  tasks:
+    - name: "Configure Zabbix Mysql password"
+      lineinfile:
+        dest=/etc/zabbix/zabbix_server.conf
+        regexp='^Timeout='
+        line="Timeout=30"
+        state=present
