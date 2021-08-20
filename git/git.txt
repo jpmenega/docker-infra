@@ -7,3 +7,7 @@ git pull origin main
 ==> git add README.md
 ==> git commit -m "first commit"
 ==> git push -u origin main
+
+
+git branch -a
+git diff master origin/master
