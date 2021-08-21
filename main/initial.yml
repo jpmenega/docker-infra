@@ -128,3 +128,9 @@
         state: present
         update_cache: true
       when: ansible_distribution == 'Debian'
+
+    - name: install sysstat
+      apt:
+        name: sysstat
+        state: present
+        update_cache: true
