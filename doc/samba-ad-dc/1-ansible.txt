@@ -10,14 +10,35 @@ cd ~/docker-cluster
 
 nano hosts-samba (alterar IPs)
 
-ansible-playbook -i hosts-samba main/initial.yml
-ansible-playbook -i hosts-samba lb/loadbalancer.yml
+ansible-playbook -i hosts-samba-drbd main/initial.yml
+ansible-playbook -i hosts-samba-drbd lb/loadbalancer.yml
 
-#ansible-playbook -i hosts-samba gluster/glusterfs.yml
-ansible-playbook -i hosts-samba samba-ad-dc/samba.yml
+#ansible-playbook -i hosts-samba-drbd gluster/glusterfs.yml
+ansible-playbook -i hosts-samba-drbd samba-ad-dc/samba.yml
 
 cd /usr/lib/ocf/resource.d/heartbeat/
 ./sambaSVC start (para criar um novo database do Samba)
+killall nmbd
+killall smbd
+killall winbindd
+
+# smb.conf example
+cd /var/lib/samba
+mv smb.conf smb.old
+wget https://raw.githubusercontent.com/jpmenega/docker-infra/main/samba-ad-dc/example/smb.conf
+(todo: criar script para substituir valores dentro do smb.conf para o cliente)
+cd /usr/lib/ocf/resource.d/heartbeat/
+./sambaSVC stop
+
+# share permissions
+https://superuser.com/questions/1459741/samba-ad-dc-windows-explorer-exe-crashes-on-security-tab-access
+https://dev.tranquil.it/samba/en/samba_advanced_methods/samba_backup_restore_rename.html  (check ACL do Sysvol e outros)
+samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
+(UZ)                 "O:BAG:DUD:PAI(A;OICI;0x001f01ff;;;DA)(A;;0x001f01ff;;;BA)(A;;0x001200a9;;;DU)"
+(Medlav)             "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)"
+samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/DATA/shares
+mkdir /var/lib/samba/DATA/shares/users
+samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/DATA/shares/users
 
 BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar os arquivos)
 -cria servidor na console do UrBackup (Internet client/client behind NAT)
@@ -26,19 +47,7 @@ BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar o
 -instala o client e para o servico
 service urbackupclientbackend stop
 
-ansible-playbook -i hosts-samba samba-ad-dc/backup-client.yml
-
-# smb.conf example
-cd /var/lib/samba
-rm smb.conf
-wget https://raw.githubusercontent.com/jpmenega/docker-infra/main/samba-ad-dc/example/smb.conf
-
-# share permissions
-https://superuser.com/questions/1459741/samba-ad-dc-windows-explorer-exe-crashes-on-security-tab-access
-https://dev.tranquil.it/samba/en/samba_advanced_methods/samba_backup_restore_rename.html  (check ACL do Sysvol e outros)
-samba-tool ntacl get --as-sddl /var/lib/samba/sysvol/SAMDOM/scripts
-(UZ)samba-tool ntacl set "O:BAG:DUD:PAI(A;OICI;0x001f01ff;;;DA)(A;;0x001f01ff;;;BA)(A;;0x001200a9;;;DU)"
-samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO)(A;OICI;0x001f01ff;;;SY)(A;OICI;0x001200a9;;;AU)" /var/lib/samba/volumes/
+ansible-playbook -i hosts-samba-drbd samba-ad-dc/backup-client.yml
 
 # reload samba config
 killall -HUP smbd nmbd
@@ -46,7 +55,7 @@ smbcontrol smbd reload-config
 smbstatus #acaba validando o smb.conf
 
 # antes setar a senha do SMTP no hosts-samba (ltb_mail_smtp_pass=)
-ansible-playbook -i hosts-samba ~/docker-cluster/samba-ad-dc/self-service-password.yml
+ansible-playbook -i hosts-samba-drbd samba-ad-dc/self-service-password.yml
 
 # Backup/Restore
 https://wiki.samba.org/index.php/Back_up_and_Restoring_a_Samba_AD_DC

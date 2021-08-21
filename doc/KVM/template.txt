@@ -1,7 +1,8 @@
 Template
 https://www.tecmint.com/create-kvm-virtual-machine-template/
 
-todo: substituir no template o nome da interface de rede para eth0 para poder bootar e pegar DHCP no inicio
+todo: substituir no template o nome da interface de rede para eth0 no /etc/network/interfaces para poder bootar e pegar DHCP no inicio
+todo: criar um script na inicializacao do template pra se nao existir os arquivos de chave em /etc/ssh/* executar as linhas abaixo em "pos sysprep"
 
 #virt-install --virt-type=kvm --name template-debian10 --ram 1024 --vcpus=2 --os-variant=debian10 --cdrom=/var/lib/libvirt/boot/debian-10.9.0-amd64-netinst.iso --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/template-debian10.qcow2,size=20,bus=virtio,format=qcow2
 
@@ -16,15 +17,16 @@ cp --sparse=always template-debian10.qcow2 <new-vm>.qcow2
 chown libvirt-qemu.libvirt-qemu <new-vm>.qcow2
 
 //importar
-virt-install --import --virt-type=kvm --name <new-vm> --ram 1024 --vcpus=2 --os-variant=debian10 --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/<new-vm>.qcow2,bus=virtio,format=qcow2
+virt-install --import --virt-type=kvm --name <new-vm> --ram 1024 --vcpus=2 --os-variant=debian10 --network=bridge=br0,model=virtio --graphic vnc --disk path=/var/lib/libvirt/images/<new-vm>.qcow2,bus=virtio,format=qcow2 --disk path=/var/lib/libvirt/images/samba-ad-dc01-drbd-shares.qcow2,size=150,bus=virtio,format=qcow2
 
 //pós sysprep
-#ssh-keygen
-#ssh-keygen -t ecdsa
-#ssh-keygen -t ed25519
-#cp /root/.ssh/id_rsa /etc/ssh/ssh_host_rsa_key
-#cp /root/.ssh/id_rsa.pub /etc/ssh/ssh_host_rsa_key.pub
-#cp /root/.ssh/id_ecdsa /etc/ssh/ssh_host_ecdsa_key
-#cp /root/.ssh/id_ecdsa.pub /etc/ssh/ssh_host_ecdsa_key.pub
-#cp /root/.ssh/id_ed25519 /etc/ssh/ssh_host_ed25519_key
-#cp /root/.ssh/id_ed25519.pub /etc/ssh/ssh_host_ed25519_key.pub
+ssh-keygen
+ssh-keygen -t ecdsa
+ssh-keygen -t ed25519
+cp /root/.ssh/id_rsa /etc/ssh/ssh_host_rsa_key
+cp /root/.ssh/id_rsa.pub /etc/ssh/ssh_host_rsa_key.pub
+cp /root/.ssh/id_ecdsa /etc/ssh/ssh_host_ecdsa_key
+cp /root/.ssh/id_ecdsa.pub /etc/ssh/ssh_host_ecdsa_key.pub
+cp /root/.ssh/id_ed25519 /etc/ssh/ssh_host_ed25519_key
+cp /root/.ssh/id_ed25519.pub /etc/ssh/ssh_host_ed25519_key.pub
+service sshd restart

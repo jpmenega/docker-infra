@@ -49,7 +49,7 @@ nameserver 192.168.16.1
 reboot
 netplan apply (nao funcionaria pois alteramos o nome da NIC no GRUB)
 
-apt install lvm2 drbd-utils
+apt install lvm2 drbd-utils btrfs-progs
 (debian)/lib/systemd/systemd-sysv-install enable drbd
 (ubuntu)systemctl enable drbd.service
 
@@ -101,7 +101,7 @@ drbdadm status
 watch -n1 cat /proc/drbd
 
 #node 1
-mkfs.btrfs -v /dev/drbd0
+mkfs.btrfs /dev/drbd0
 drbdadm secondary samba
 
 systemctl disable pacemaker.service
