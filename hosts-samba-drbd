@@ -8,7 +8,7 @@ samba-ad-dc02 ansible_host=192.168.15.14 ansible_user=root lb_slave=yes gluster=
 ansible_python_interpreter=/usr/bin/python3
 domain_name=medlav.intranet
 domain_name_upper=MEDLAV.INTRANET
-domain_password=<password>
+domain_password=M3dl@v2106
 dns_server=192.168.15.1
 zabbix_agent_package_url=https://repo.zabbix.com/zabbix/5.2/debian/pool/main/z/zabbix-release/zabbix-release_5.2-1%2Bdebian10_all.deb
 zabbix_agent_package_name=zabbix-release_5.2-1%2Bdebian10_all.deb
@@ -27,7 +27,7 @@ ltb_mail_from=medlav.mostlycloudy@gmail.com
 ltb_mail_from_name=Medlav Intranet - Reset de senha
 ltb_mail_smtp_host=smtp.gmail.com
 ltb_mail_smtp_user=medlav.mostlycloudy@gmail.com
-ltb_mail_smtp_pass=<password>
+ltb_mail_smtp_pass=M3dl@v2106
 #https://myaccount.google.com/lesssecureapps
 ltb_mail_smtp_port=587
 company_logo=http://descartaveis.medlav.com.br/wp-content/uploads/2020/08/MEDLAV-DESCARTAVEIS.svg
