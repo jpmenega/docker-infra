@@ -43,19 +43,19 @@ samba-tool ntacl set "O:LAG:BAD:P(A;OICI;0x001f01ff;;;BA)(A;OICI;0x001200a9;;;SO
 BACKUP (precisa parar o cluster/banco pq o script vai subir o DRDB para copiar os arquivos)
 -cria servidor na console do UrBackup (Internet client/client behind NAT)
 -copia URL/script para instalacao (ainda nao instala)
--configura o schedule/path etc na console (pasta para bkp /tmp/backup)
+-configura o schedule/path etc na console (pasta para bkp /var/lib/samba/DATA/.snapshots/backup)
 -instala o client e para o servico
 service urbackupclientbackend stop
 
 ansible-playbook -i hosts-samba-drbd samba-ad-dc/backup-client.yml
 
+# antes setar a senha do SMTP no hosts-samba (ltb_mail_smtp_pass=)
+ansible-playbook -i hosts-samba-drbd samba-ad-dc/self-service-password.yml
+
 # reload samba config
 killall -HUP smbd nmbd
 smbcontrol smbd reload-config
 smbstatus #acaba validando o smb.conf
-
-# antes setar a senha do SMTP no hosts-samba (ltb_mail_smtp_pass=)
-ansible-playbook -i hosts-samba-drbd samba-ad-dc/self-service-password.yml
 
 # Backup/Restore
 https://wiki.samba.org/index.php/Back_up_and_Restoring_a_Samba_AD_DC
