@@ -27,7 +27,7 @@
       with_items: "{{ (lb_primary | default([])) }}"
 
     - name: Create urbackup folder
-      ansible.builtin.file:
+      file:
         path: /var/lib/samba/DATA/samba-backup/urbackup/
         state: directory
         mode: '0755'
@@ -43,10 +43,11 @@
       shell: "mv /usr/local /usr/local-tag"
 
     - name: Create a symbolic link
-      ansible.builtin.file:
+      file:
         src: /var/lib/samba/DATA/samba-backup/urbackup/
         dest: /usr/local
         state: link
+        force: yes
 
     - name: Download pre UrBackup job script
       get_url:
