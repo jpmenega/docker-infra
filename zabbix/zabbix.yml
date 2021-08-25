@@ -492,3 +492,25 @@
         minute: "0"
         hour: "23"
         job: "/var/lib/zabbix/backup.sh"
+
+    - name: Install smbclient
+      command: apt-get install -y smbclient
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Download smb_check.sh script
+      get_url:
+        url: "{{ git_source }}/zabbix/scripts/smb_check.sh"
+        dest: "/usr/lib/zabbix/externalscripts"
+
+    - name: Grant execute permition to smb_check.sh script
+      file:
+        path: /usr/lib/zabbix/externalscripts/smb_check.sh
+        state: touch
+        mode: "u=rwx,g=rx,o=rx" 
+
+    - name: Create a symbolic link for externalscripts
+      file:
+        src: /usr/lib/zabbix/externalscripts
+        dest: /usr/share/zabbix/externalscripts
+        state: link
