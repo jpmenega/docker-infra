@@ -192,7 +192,8 @@ samba_setup () {
                 fi
                 # Once we are set up, we'll make a file so that we know to use it if we ever spin this up again
                 cp /etc/samba/smb.conf /var/lib/samba/smb.conf
-		mkdir /var/lib/samba/DATA
+		btrfs subvolume create /var/lib/samba/DATA
+		#mkdir /var/lib/samba/DATA
 		mkdir /var/lib/samba/DATA/shares
 		mkdir /var/lib/samba/DATA/samba-backup
         else

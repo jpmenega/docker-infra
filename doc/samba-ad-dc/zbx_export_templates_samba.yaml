@@ -1,0 +1,43 @@
+zabbix_export:
+  version: '5.2'
+  date: '2021-08-25T00:44:39Z'
+  groups:
+    -
+      name: Templates
+  templates:
+    -
+      template: 'Samba SMB Share'
+      name: 'Samba SMB Share'
+      description: 'Check SMB share availability'
+      groups:
+        -
+          name: Templates
+      applications:
+        -
+          name: SMB
+      items:
+        -
+          name: 'Samba: Servidor de arquivos status'
+          type: EXTERNAL
+          key: 'smb_check.sh[{HOST.CONN},{$SMBUSER},{$SMBPASS},{$SMBSHARE}]'
+          delay: 2m
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          applications:
+            -
+              name: SMB
+          triggers:
+            -
+              expression: '{last()}<>0'
+              name: 'Servidor Samba ({HOST.NAME}) indisponivel'
+              priority: DISASTER
+      macros:
+        -
+          macro: '{$SMBRIGHTS}'
+          value: 'share1$+r,share2+w,share3|user:pass+r'
+          description: 'List of shares with rights separated by , Syntax is SHARE/SUBFOLDER/SUBFOLDER/EVENMORE|USER:PASS{RIGHTS_CODE}'
+        -
+          macro: '{$SMBSHARES}'
+          value: 'smbshare1,smbshare2'
+          description: 'List of shares separated by ,'
